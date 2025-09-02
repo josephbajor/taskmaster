@@ -1,70 +1,71 @@
-# taskmaster
-Taskmaster is an llm-powered time management app designed to eliminate unstructured time in your day
+# Taskmaster
+
+Taskmaster is a planner app designed around automatic prioritization and task creation from unstructured text. This repo is structured to enable independent development of the Electron frontend and Python backend, with an API defined via Fern (Fern Definition) for generated SDKs.
+
+## Project structure
+
+```
+taskmaster/
+├── electron/            # Electron desktop UI (self-contained NPM project)
+├── backend/             # Python backend (uv-managed FastAPI app)
+├── shared/              # Shared assets/configs
+├── fern/                # Fern Definition + generators
+└── scripts/             # Dev/build helpers
+```
 
 ## Prerequisites
-- Python 3.13+
-- uv (Python project manager). Install via pipx:
-```
-pipx install uv
-```
-- Node.js 20+ and npm
-- ffmpeg (for audio transcoding)
-  - macOS: `brew install ffmpeg`
 
-## Setup
+- Node.js 18+ and npm
+- `uv` package manager (`curl -LsSf https://astral.sh/uv/install.sh | sh`) — manages Python for you
+- OpenAI API key (`OPENAI_API_KEY`)
 
-### 1) Backend API (FastAPI)
-From the project root:
+## One-command dev
+
 ```
+./scripts/dev.sh
+```
+
+This will:
+- Sync backend deps with `uv sync`
+- Generate SDKs with Fern
+- Start the FastAPI backend on http://127.0.0.1:8000
+- Start the Electron app
+
+Note: Scripts auto-detect a system `fern` CLI (e.g., via Homebrew) and use it when available; otherwise they fallback to an npx-based CLI.
+
+If `OPENAI_API_KEY` is not set, you’ll see a warning and transcription requests will fail until you export it.
+
+## Running the backend (manual)
+
+```
+cd backend
 uv sync
-uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
-```
-Verify it's up:
-```
-curl http://127.0.0.1:8000/healthz
+export OPENAI_API_KEY=YOUR_KEY
+uv run uvicorn server:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-First transcription may download the model (hundreds of MB) on demand.
+- Health check: `GET http://127.0.0.1:8000/api/health`
+- Transcription: `POST http://127.0.0.1:8000/api/transcriptions` with `multipart/form-data` field `file`
 
-Optional environment variables (tune Whisper runtime):
-- `WHISPER_MODEL` (default: `small`)
-- `WHISPER_DEVICE` (default: `auto`)
-- `WHISPER_COMPUTE_TYPE` (defaults vary by platform; loader auto-falls back among `float16`, `int8_float32`, `int8`, `float32`)
-- `WHISPER_VAD` (`1` to enable VAD; default `0`)
+## API definition & SDKs (Fern)
 
-If you see a 500 error about compute type, try:
+We use a Fern Definition rather than OpenAPI.
+
+- Definition files under `fern/definition/`:
+  - `api.yml`: API-level config and environments
+  - `taskmaster.yml`: endpoints and types
+- Generators: `fern/generators.yml`
+
+Generate SDKs locally:
+
 ```
-export WHISPER_COMPUTE_TYPE=int8_float32
-```
-
-### 2) Desktop app (Electron + React)
-In a separate terminal:
-```
-cd desktop
-npm install
-npm run dev
-```
-This starts Vite and launches Electron pointed at `http://localhost:5173`.
-
-## Using the jot pad
-- In the app, type in the quick jot area and press Enter (or Cmd/Ctrl+Enter) to add a note.
-- Click "Start Mic" to record; click "Stop Mic" to send audio to the backend and append the transcription as a note.
-
-## Troubleshooting
-- Backend 500 with compute type: set `WHISPER_COMPUTE_TYPE=int8_float32` and restart the API.
-- No audio transcription: ensure `ffmpeg` is installed and available on PATH.
-- macOS microphone access: System Settings → Privacy & Security → Microphone → allow for your terminal/Electron app.
-
-## Project structure (partial)
-```
-backend/
-  app/
-    main.py           # FastAPI app (healthz, /transcribe)
-    transcription.py  # faster-whisper loader + transcribe
-    audio_utils.py    # ffmpeg-based WebM/Opus→WAV conversion
-desktop/
-  electron/           # electron main & preload
-  src/ui/             # React UI
-  package.json        # dev scripts
+./scripts/build.sh
 ```
 
+Refer to Fern’s Fern Definition overview for structure and examples ([Fern Definition overview](https://buildwithfern.com/learn/api-definitions/ferndef/overview)).
+
+## Notes
+
+- Electron and Python can be run independently for faster iteration.
+- Ensure `OPENAI_API_KEY` is set for backend transcription.
+- This is a minimal MVP wiring. Error handling and streaming UX can be enhanced later.

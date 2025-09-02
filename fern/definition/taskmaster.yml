@@ -1,0 +1,28 @@
+service:
+  auth: false
+  base-path: /api
+  endpoints:
+    getHealth:
+      method: GET
+      path: /health
+      response: HealthResponse
+    createTranscription:
+      docs: Transcribe uploaded audio file
+      method: POST
+      path: /transcriptions
+      request:
+        name: CreateTranscriptionRequest
+        body:
+          properties:
+            # Using multipart file upload: in Fern, file upload uses 'file' type
+            file: file
+      response: TranscriptionResponse
+
+types:
+  HealthResponse:
+    properties:
+      status: string
+
+  TranscriptionResponse:
+    properties:
+      text: string

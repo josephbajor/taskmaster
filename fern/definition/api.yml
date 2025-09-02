@@ -1,0 +1,10 @@
+name: taskmaster
+
+# Optional documentation for the API
+docs: Taskmaster API
+
+default-environment: local
+
+environments:
+  local:
+    base-url: http://127.0.0.1:8000

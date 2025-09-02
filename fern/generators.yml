@@ -1,0 +1,15 @@
+groups:
+  ts-sdk:
+    generators:
+      - name: fernapi/fern-typescript-sdk
+        version: 2.9.4
+        output:
+          location: local
+          path: ../electron/src/sdk
+  python-sdk:
+    generators:
+      - name: fernapi/fern-python-sdk
+        version: 4.27.0-rc0
+        output:
+          location: local
+          path: ../backend/taskmaster/sdk

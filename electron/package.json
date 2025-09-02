@@ -1,0 +1,15 @@
+{
+    "name": "taskmaster-electron",
+    "version": "0.1.0",
+    "private": true,
+    "main": "main.js",
+    "type": "module",
+    "scripts": {
+        "dev": "electron .",
+        "start": "electron ."
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "electron": "^31.2.0"
+    }
+}

@@ -1,0 +1,21 @@
+[project]
+name = "taskmaster-backend"
+version = "0.1.0"
+description = "Taskmaster backend server (FastAPI)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "python-multipart>=0.0.9",
+    "openai>=1.40.0",
+    "pydantic>=2.6",
+    "starlette>=0.36",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.uv]
+package = true
