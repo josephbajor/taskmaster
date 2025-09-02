@@ -33,18 +33,22 @@ uv sync
 popd >/dev/null
 
 # Fern generate (SDKs to electron/src/sdk and backend/taskmaster/sdk)
-echo "[dev] Generating SDKs with Fern"
+echo "[dev] Generating SDKs with Fern (ts-sdk)"
 pushd "$FERN_DIR" >/dev/null
 if command -v fern >/dev/null 2>&1; then
-	fern generate --log-level info | cat
+	fern generate --group ts-sdk --log-level info | cat
+	echo "[dev] Generating SDKs with Fern (python-sdk)"
+	fern generate --group python-sdk --log-level info | cat
 else
-	if npx --yes fern-api generate --log-level info | cat; then
-		:
-	elif npx --yes --package @fern-api/cli fern generate --log-level info | cat; then
-		:
-	else
-		echo "Error: Fern generation failed. Ensure fern is installed (brew install fern-api/tap/fern) or npx works." >&2
-		exit 1
+	echo "[dev] Generating SDKs with npx fern-api (ts-sdk)"
+	if ! npx --yes fern-api generate --group ts-sdk --log-level info | cat; then
+		echo "[dev] Falling back to @fern-api/cli (ts-sdk)"
+		npx --yes --package @fern-api/cli fern generate --group ts-sdk --log-level info | cat
+	fi
+	echo "[dev] Generating SDKs with npx fern-api (python-sdk)"
+	if ! npx --yes fern-api generate --group python-sdk --log-level info | cat; then
+		echo "[dev] Falling back to @fern-api/cli (python-sdk)"
+		npx --yes --package @fern-api/cli fern generate --group python-sdk --log-level info | cat
 	fi
 fi
 popd >/dev/null
@@ -53,7 +57,17 @@ popd >/dev/null
 if [[ ! -d "$ELECTRON_DIR/node_modules" ]]; then
 	echo "[dev] Installing Electron dependencies"
 	pushd "$ELECTRON_DIR" >/dev/null
-	npm ci || npm install
+	if [[ -f package-lock.json ]]; then
+		npm ci
+	else
+		echo "[dev] Creating package-lock.json"
+		if npm install --package-lock-only; then
+			npm ci
+		else
+			echo "[dev] npm install --package-lock-only unsupported; running npm install"
+			npm install
+		fi
+	fi
 	popd >/dev/null
 fi
 
