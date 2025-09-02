@@ -5,7 +5,7 @@
 import * as environments from "./environments.js";
 import * as core from "./core/index.js";
 import { mergeHeaders } from "./core/headers.js";
-import { Taskmaster } from "./api/resources/taskmaster/client/Client.js";
+import { Transcription } from "./api/resources/transcription/client/Client.js";
 
 export declare namespace TaskmasterTaskmasterClient {
     export interface Options {
@@ -32,7 +32,7 @@ export declare namespace TaskmasterTaskmasterClient {
 
 export class TaskmasterTaskmasterClient {
     protected readonly _options: TaskmasterTaskmasterClient.Options;
-    protected _taskmaster: Taskmaster | undefined;
+    protected _transcription: Transcription | undefined;
 
     constructor(_options: TaskmasterTaskmasterClient.Options = {}) {
         this._options = {
@@ -48,7 +48,7 @@ export class TaskmasterTaskmasterClient {
         };
     }
 
-    public get taskmaster(): Taskmaster {
-        return (this._taskmaster ??= new Taskmaster(this._options));
+    public get transcription(): Transcription {
+        return (this._transcription ??= new Transcription(this._options));
     }
 }

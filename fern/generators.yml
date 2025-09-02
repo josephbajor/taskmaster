@@ -6,10 +6,10 @@ groups:
         output:
           location: local-file-system
           path: ../electron/src/sdk
-  python-sdk:
+  python-server:
     generators:
-      - name: fernapi/fern-python-sdk
-        version: 4.27.0-rc0
+      - name: fernapi/fern-fastapi-server
+        version: 1.8.0
         output:
           location: local-file-system
-          path: ../backend/taskmaster/sdk
+          path: ../backend/taskmaster/api

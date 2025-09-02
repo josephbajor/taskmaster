@@ -1,7 +1,11 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from taskmaster.transcription import transcribe_audio_file
+import logging
+import traceback
+from fastapi.responses import JSONResponse
+
+from taskmaster.api.register import register as register_fern
+from taskmaster.api.resources.transcription.service.impl import TranscriptionService
 
 app = FastAPI(title="Taskmaster API", version="0.1.0")
 
@@ -14,28 +18,22 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-
-class HealthResponse(BaseModel):
-    status: str
-
-
-class TranscriptionResponse(BaseModel):
-    text: str
+# Register Fern-generated API routes with our implementation
+register_fern(app, transcription=TranscriptionService())
 
 
-@app.get("/api/health", response_model=HealthResponse)
-async def health() -> HealthResponse:
-    return HealthResponse(status="ok")
-
-
-@app.post("/api/transcriptions", response_model=TranscriptionResponse)
-async def transcriptions(file: UploadFile = File(...)) -> TranscriptionResponse:
-    if not file:
-        raise HTTPException(status_code=400, detail="No file uploaded")
-
-    try:
-        contents = await file.read()
-        text = await transcribe_audio_file(contents, filename=file.filename or "audio.webm")
-        return TranscriptionResponse(text=text)
-    except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=500, detail=str(e))
+# Global error handler with traceback logging
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):  # noqa: ANN001
+    logging.basicConfig(level=logging.DEBUG)
+    logging.exception("Unhandled exception during request: %s %s", request.method, request.url)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": str(exc),
+            "type": exc.__class__.__name__,
+            "traceback": traceback.format_exc(),
+            "path": str(request.url),
+            "method": request.method,
+        },
+    )

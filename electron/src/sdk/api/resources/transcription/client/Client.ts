@@ -8,7 +8,7 @@ import * as TaskmasterTaskmaster from "../../../index.js";
 import { mergeHeaders, mergeOnlyDefinedHeaders } from "../../../../core/headers.js";
 import * as errors from "../../../../errors/index.js";
 
-export declare namespace Taskmaster {
+export declare namespace Transcription {
     export interface Options {
         environment?: core.Supplier<environments.TaskmasterTaskmasterEnvironment | string>;
         /** Specify a custom URL to connect the client to. */
@@ -31,27 +31,27 @@ export declare namespace Taskmaster {
     }
 }
 
-export class Taskmaster {
-    protected readonly _options: Taskmaster.Options;
+export class Transcription {
+    protected readonly _options: Transcription.Options;
 
-    constructor(_options: Taskmaster.Options = {}) {
+    constructor(_options: Transcription.Options = {}) {
         this._options = _options;
     }
 
     /**
-     * @param {Taskmaster.RequestOptions} requestOptions - Request-specific configuration.
+     * @param {Transcription.RequestOptions} requestOptions - Request-specific configuration.
      *
      * @example
-     *     await client.taskmaster.getHealth()
+     *     await client.transcription.getHealth()
      */
     public getHealth(
-        requestOptions?: Taskmaster.RequestOptions,
+        requestOptions?: Transcription.RequestOptions,
     ): core.HttpResponsePromise<TaskmasterTaskmaster.HealthResponse> {
         return core.HttpResponsePromise.fromPromise(this.__getHealth(requestOptions));
     }
 
     private async __getHealth(
-        requestOptions?: Taskmaster.RequestOptions,
+        requestOptions?: Transcription.RequestOptions,
     ): Promise<core.WithRawResponse<TaskmasterTaskmaster.HealthResponse>> {
         let _headers: core.Fetcher.Args["headers"] = mergeHeaders(this._options?.headers, requestOptions?.headers);
         const _response = await core.fetcher({
@@ -101,18 +101,18 @@ export class Taskmaster {
      * Transcribe uploaded audio file
      *
      * @param {TaskmasterTaskmaster.CreateTranscriptionRequest} request
-     * @param {Taskmaster.RequestOptions} requestOptions - Request-specific configuration.
+     * @param {Transcription.RequestOptions} requestOptions - Request-specific configuration.
      */
     public createTranscription(
         request: TaskmasterTaskmaster.CreateTranscriptionRequest,
-        requestOptions?: Taskmaster.RequestOptions,
+        requestOptions?: Transcription.RequestOptions,
     ): core.HttpResponsePromise<TaskmasterTaskmaster.TranscriptionResponse> {
         return core.HttpResponsePromise.fromPromise(this.__createTranscription(request, requestOptions));
     }
 
     private async __createTranscription(
         request: TaskmasterTaskmaster.CreateTranscriptionRequest,
-        requestOptions?: Taskmaster.RequestOptions,
+        requestOptions?: Transcription.RequestOptions,
     ): Promise<core.WithRawResponse<TaskmasterTaskmaster.TranscriptionResponse>> {
         const _request = await core.newFormData();
         await _request.appendFile("file", request.file);
@@ -127,7 +127,7 @@ export class Taskmaster {
                 (await core.Supplier.get(this._options.baseUrl)) ??
                     (await core.Supplier.get(this._options.environment)) ??
                     environments.TaskmasterTaskmasterEnvironment.Local,
-                "/api/transcriptions",
+                "/api/create-transcription",
             ),
             method: "POST",
             headers: _headers,
@@ -163,7 +163,7 @@ export class Taskmaster {
                 });
             case "timeout":
                 throw new errors.TaskmasterTaskmasterTimeoutError(
-                    "Timeout exceeded when calling POST /api/transcriptions.",
+                    "Timeout exceeded when calling POST /api/create-transcription.",
                 );
             case "unknown":
                 throw new errors.TaskmasterTaskmasterError({

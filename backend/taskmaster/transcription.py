@@ -7,7 +7,7 @@ import os
 from openai import OpenAI
 
 
-async def transcribe_audio_file(file_bytes: bytes, filename: Optional[str] = None) -> str:
+def transcribe_audio_file(file_bytes: bytes, filename: Optional[str] = None) -> str:
 	"""Transcribe the given audio bytes using OpenAI Whisper (server-side).
 
 	Args:

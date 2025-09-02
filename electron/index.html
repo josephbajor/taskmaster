@@ -7,52 +7,166 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Taskmaster</title>
     <style>
+        :root {
+            --bg-start: #f6f8fb;
+            --bg-end: #eef1f6;
+            --text: #0f172a;
+            --muted: #6b7280;
+            --card-bg: #ffffff;
+            --accent: #ff3b30;
+            /* recording */
+            --focus: #2563eb;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
-            padding: 24px;
+            padding: 0;
+            background: linear-gradient(180deg, var(--bg-start), var(--bg-end));
+            color: var(--text);
+        }
+
+        html,
+        body {
+            height: 100%;
         }
 
         .container {
             max-width: 900px;
-            margin: 0 auto;
+            margin: 32px auto;
+            position: relative;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(2, 6, 23, 0.10);
+            border: 1px solid rgba(2, 6, 23, 0.06);
+            padding: 20px 20px 24px 20px;
+            -webkit-app-region: drag;
+            overflow: hidden;
+            /* keep inner focus ring/edges inside rounded card */
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100vh - 64px);
+        }
+
+        h2 {
+            margin: 0 0 8px 0;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 4px 0 12px 0;
+            -webkit-app-region: drag;
+        }
+
+        .status {
+            color: var(--muted);
+            font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            display: inline-block;
+            -webkit-app-region: no-drag;
+        }
+
+        .editor {
+            position: relative;
+            -webkit-app-region: no-drag;
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
         }
 
         textarea {
             width: 100%;
-            height: 300px;
-            padding: 12px;
+            height: auto;
+            flex: 1 1 auto;
+            min-height: 0;
+            padding: 16px 20px 64px 20px;
             font-size: 16px;
+            line-height: 1.5;
+            color: var(--text);
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            outline: none;
+            resize: none;
+            transition: box-shadow 160ms ease, border-color 160ms ease;
+            -webkit-app-region: no-drag;
+            box-sizing: border-box;
         }
 
-        .toolbar {
-            display: flex;
-            gap: 12px;
-            margin: 12px 0;
-            align-items: center;
+        textarea:focus {
+            border-color: rgba(37, 99, 235, 0.35);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
         }
 
-        button {
-            padding: 8px 12px;
-            font-size: 14px;
+        /* Floating record button */
+        #micBtn.record-btn {
+            position: absolute;
+            right: 16px;
+            bottom: 16px;
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            background: rgba(255, 255, 255, 0.35);
+            -webkit-backdrop-filter: saturate(180%) blur(12px);
+            backdrop-filter: saturate(180%) blur(12px);
+            color: #111827;
             cursor: pointer;
+            box-shadow: 0 8px 24px rgba(2, 6, 23, 0.12);
+            transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
+            -webkit-app-region: no-drag;
         }
 
-        .status {
-            color: #666;
-            font-size: 12px;
+        #micBtn.record-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        #micBtn.record-btn.active {
+            background: var(--accent);
+            border-color: rgba(0, 0, 0, 0.08);
+            color: white;
+            -webkit-backdrop-filter: none;
+            backdrop-filter: none;
+            box-shadow: 0 8px 24px rgba(255, 59, 48, 0.35);
+        }
+
+        #micBtn.record-btn svg {
+            width: 20px;
+            height: 20px;
+            display: block;
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <h2>Taskmaster</h2>
-        <div class="toolbar">
-            <button id="micBtn">🎤 Start Recording</button>
+        <div class="topbar">
+            <h2>Taskmaster</h2>
             <span class="status" id="status">Idle</span>
         </div>
-        <textarea id="textInput" placeholder="Type or dictate your tasks here..."></textarea>
+        <div class="editor">
+            <textarea id="textInput" placeholder="Type or dictate your tasks here..."></textarea>
+            <button id="micBtn" class="record-btn" aria-pressed="false" title="Start recording" aria-label="Record"
+                type="button">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 15a3 3 0 003-3V7a3 3 0 10-6 0v5a3 3 0 003 3z" stroke="currentColor" stroke-width="1.8"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M19 11a7 7 0 01-14 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    <path d="M12 18v3m-3 0h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+            </button>
+        </div>
     </div>
     <script src="./src/renderer.js"></script>
 </body>

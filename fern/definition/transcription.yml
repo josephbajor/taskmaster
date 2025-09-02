@@ -9,7 +9,7 @@ service:
     createTranscription:
       docs: Transcribe uploaded audio file
       method: POST
-      path: /transcriptions
+      path: /create-transcription
       request:
         name: CreateTranscriptionRequest
         body:

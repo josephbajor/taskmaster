@@ -23,21 +23,18 @@ async function startRecording() {
         }
 
         mediaRecorder.onstop = async () => {
+            const startTime = Date.now()
             try {
                 setStatus('Uploading…')
                 const blob = new Blob(recordedChunks, { type: 'audio/webm' })
                 const form = new FormData()
                 form.append('file', blob, 'audio.webm')
 
-                const res = await fetch('http://127.0.0.1:8000/api/transcriptions', {
-                    method: 'POST',
-                    body: form
-                })
-                if (!res.ok) {
-                    const msg = await res.text()
-                    throw new Error(`Transcription failed: ${msg}`)
-                }
-                const data = await res.json()
+                // Use generated SDK
+                // Use bundled SDK for reliable import from file://
+                const { TaskmasterTaskmasterClient, TaskmasterTaskmasterEnvironment } = await import('./sdk/index.bundle.js')
+                const client = new TaskmasterTaskmasterClient({ environment: TaskmasterTaskmasterEnvironment.Local })
+                const data = await client.transcription.createTranscription({ file: blob })
                 // Insert transcription at cursor or append
                 const insertion = data.text || ''
                 const start = textInput.selectionStart
@@ -46,9 +43,26 @@ async function startRecording() {
                 const after = textInput.value.slice(end)
                 textInput.value = `${before}${insertion}${after}`
                 textInput.selectionStart = textInput.selectionEnd = start + insertion.length
+                const ms = Date.now() - startTime
+                console.info(`[renderer] Transcription success in ${ms}ms`)
                 setStatus('Idle')
             } catch (err) {
-                console.error(err)
+                console.error('[renderer] Transcription error:', err)
+                try {
+                    // Try to print rich details for SDK errors
+                    if (err && typeof err === 'object') {
+                        const anyErr = err
+                        if (anyErr.statusCode) console.error('statusCode:', anyErr.statusCode)
+                        if (anyErr.body) console.error('body:', anyErr.body)
+                        if (anyErr.rawResponse) {
+                            const raw = anyErr.rawResponse
+                            console.error('rawResponse.status:', raw.status)
+                            console.error('rawResponse.headers:', raw.headers)
+                            const text = await raw.rawResponse.text().catch(() => null)
+                            if (text) console.error('rawResponse.bodyText:', text)
+                        }
+                    }
+                } catch { }
                 setStatus('Error')
             } finally {
                 if (stream) {
@@ -76,11 +90,24 @@ let isRecording = false
 micBtn.addEventListener('click', async () => {
     if (!isRecording) {
         isRecording = true
-        micBtn.textContent = '⏹ Stop Recording'
+        micBtn.classList.add('active')
+        micBtn.setAttribute('aria-pressed', 'true')
+        micBtn.title = 'Stop recording'
         await startRecording()
     } else {
         isRecording = false
-        micBtn.textContent = '🎤 Start Recording'
+        micBtn.classList.remove('active')
+        micBtn.setAttribute('aria-pressed', 'false')
+        micBtn.title = 'Start recording'
         stopRecording()
     }
+})
+
+// Global error visibility in renderer
+window.addEventListener('error', (e) => {
+    console.error('[renderer] Unhandled error:', e.error || e.message)
+    if (e?.error?.stack) console.error(e.error.stack)
+})
+window.addEventListener('unhandledrejection', (e) => {
+    console.error('[renderer] Unhandled rejection:', e.reason)
 })
