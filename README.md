@@ -69,3 +69,54 @@ Refer to Fern’s Fern Definition overview for structure and examples ([Fern Def
 - Electron and Python can be run independently for faster iteration.
 - Ensure `OPENAI_API_KEY` is set for backend transcription.
 - This is a minimal MVP wiring. Error handling and streaming UX can be enhanced later.
+
+## Backend debugging (breakpoints)
+
+You can launch the backend with `debugpy` so you can attach a debugger (VS Code, PyCharm, etc.). The dev script wires this up using `uv` so no global Python packages are required.
+
+### Quick start
+
+Start dev with backend debugging enabled:
+
+```
+./scripts/dev.sh --backend-debug
+```
+
+Options:
+
+- `--backend-debug-port <port>`: Debugger port (default: 5678)
+- `--backend-debug-wait`: Make the server wait for the debugger to attach before serving
+- `--no-electron`: Skip launching the Electron app (useful when only debugging backend)
+
+Under the hood, this sets the following env vars read by `backend/server.py`:
+
+- `BACKEND_DEBUG=1`
+- `BACKEND_DEBUG_PORT` (default `5678`)
+- `BACKEND_DEBUG_WAIT=1` when `--backend-debug-wait` is used
+
+The backend is started via `uv run --with debugpy` to install and load `debugpy` in an ephemeral, project-local environment.
+
+### Attach from VS Code
+
+Add a launch config like:
+
+```json
+{
+  "name": "Attach to Taskmaster backend",
+  "type": "python",
+  "request": "attach",
+  "connect": { "host": "127.0.0.1", "port": 5678 },
+  "justMyCode": true
+}
+```
+
+Then run `./scripts/dev.sh --backend-debug --no-electron` (optional) and attach.
+
+### Attach from PyCharm
+
+Run > Edit Configurations… > Add New > Python Debug Server
+
+- Port: 5678
+- Host: 127.0.0.1
+
+Start `./scripts/dev.sh --backend-debug` and then click the debug config to attach.

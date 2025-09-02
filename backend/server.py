@@ -2,7 +2,29 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 import traceback
+import os
+import asyncio
 from fastapi.responses import JSONResponse
+
+# Optional: enable debugpy when requested via environment variables
+_DEBUGPY = None
+_DEBUG_WAIT = os.getenv("BACKEND_DEBUG_WAIT") == "1"
+if os.getenv("BACKEND_DEBUG") == "1":
+    try:
+        # debugpy is installed ad-hoc via `uv run --with debugpy` in dev.sh
+        import debugpy  # type: ignore
+
+        _DEBUGPY = debugpy
+        debug_host = os.getenv("BACKEND_DEBUG_HOST", "127.0.0.1")
+        try:
+            debug_port = int(os.getenv("BACKEND_DEBUG_PORT", "5678"))
+        except ValueError:
+            debug_port = 5678
+
+        debugpy.listen((debug_host, debug_port))
+        logging.getLogger(__name__).info("debugpy listening on %s:%s", debug_host, debug_port)
+    except Exception:
+        logging.exception("Failed to initialize debugpy; continuing without debugger")
 
 from taskmaster.api.register import register as register_fern
 from taskmaster.api.resources.transcription.service.impl import TranscriptionService
@@ -18,8 +40,22 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-# Register Fern-generated API routes with our implementation
+# Register Fern-generated API routes
 register_fern(app, transcription=TranscriptionService())
+
+# If requested, wait for debugger attachment during startup in a non-blocking loop
+if _DEBUGPY is not None and _DEBUG_WAIT:
+    @app.on_event("startup")
+    async def _wait_for_debugger() -> None:  # noqa: D401
+        logger = logging.getLogger(__name__)
+        logger.info("Waiting for debugger to attach (Ctrl-C to quit)...")
+        try:
+            while not _DEBUGPY.is_client_connected():
+                await asyncio.sleep(0.1)
+        except Exception:
+            logger.exception("Error while waiting for debugger to attach")
+        else:
+            logger.info("Debugger attached. Continuing startup.")
 
 
 # Global error handler with traceback logging

@@ -6,6 +6,37 @@ REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 BACKEND_DIR="$REPO_ROOT/backend"
 ELECTRON_DIR="$REPO_ROOT/electron"
 
+# Args / flags (defaults)
+BACKEND_DEBUG=0
+BACKEND_DEBUG_PORT=5678
+BACKEND_DEBUG_WAIT=0
+START_ELECTRON=1
+
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+		--backend-debug)
+			BACKEND_DEBUG=1
+			shift
+			;;
+		--backend-debug-port)
+			BACKEND_DEBUG_PORT="$2"
+			shift 2
+			;;
+		--backend-debug-wait)
+			BACKEND_DEBUG_WAIT=1
+			shift
+			;;
+		--no-electron)
+			START_ELECTRON=0
+			shift
+			;;
+		*)
+			echo "Unknown argument: $1" >&2
+			exit 1
+			;;
+	esac
+done
+
 # Ensure we cleanup children on exit
 cleanup() {
 	if [[ -n "${BACKEND_PID:-}" ]] && kill -0 "$BACKEND_PID" >/dev/null 2>&1; then
@@ -54,9 +85,15 @@ if [[ ! -d "$ELECTRON_DIR/node_modules" ]]; then
 fi
 
 # Start backend
-echo "[dev] Starting backend at http://127.0.0.1:8000 (debug logging)"
 pushd "$BACKEND_DIR" >/dev/null
-uv run uvicorn server:app --host 127.0.0.1 --port 8000 --reload --log-level debug &
+if [[ "$BACKEND_DEBUG" == "1" ]]; then
+	echo "[dev] Starting backend with debugpy (port $BACKEND_DEBUG_PORT) at http://127.0.0.1:8000"
+	BACKEND_DEBUG=1 BACKEND_DEBUG_PORT="$BACKEND_DEBUG_PORT" BACKEND_DEBUG_WAIT="$BACKEND_DEBUG_WAIT" \
+		uv run --with debugpy uvicorn server:app --host 127.0.0.1 --port 8000 --log-level debug &
+else
+	echo "[dev] Starting backend at http://127.0.0.1:8000 (reload, debug logging)"
+	uv run uvicorn server:app --host 127.0.0.1 --port 8000 --reload --log-level debug &
+fi
 BACKEND_PID=$!
 popd >/dev/null
 
@@ -64,7 +101,11 @@ popd >/dev/null
 sleep 1
 
 # Start Electron (foreground)
-echo "[dev] Starting Electron app"
-pushd "$ELECTRON_DIR" >/dev/null
-npm run dev
-popd >/dev/null
+if [[ "$START_ELECTRON" == "1" ]]; then
+	echo "[dev] Starting Electron app"
+	pushd "$ELECTRON_DIR" >/dev/null
+	npm run dev
+	popd >/dev/null
+else
+	echo "[dev] Skipping Electron launch (--no-electron)"
+fi
