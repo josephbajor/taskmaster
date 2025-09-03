@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Attach: Taskmaster backend (debugpy)",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "127.0.0.1",
+                "port": 5678
+            },
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}/backend",
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}/backend",
+                    "remoteRoot": "${workspaceFolder}/backend"
+                }
+            ]
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Attach backend (run dev.sh separately)",
+            "configurations": [
+                "Attach: Taskmaster backend (debugpy)"
+            ]
+        }
+    ]
+}
