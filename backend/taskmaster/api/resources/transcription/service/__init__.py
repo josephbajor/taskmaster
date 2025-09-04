@@ -3,6 +3,5 @@
 # isort: skip_file
 
 from .service import AbstractTranscriptionService
-from .impl import TranscriptionService
 
-__all__ = ["AbstractTranscriptionService", "TranscriptionService"]
+__all__ = ["AbstractTranscriptionService"]

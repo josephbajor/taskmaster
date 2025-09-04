@@ -2,7 +2,20 @@
 
 # isort: skip_file
 
-from . import transcription
-from .transcription import HealthResponse, TranscriptionResponse
+from . import core, tasks, transcription
+from .core import HealthResponse
+from .tasks import CreateTaskRequest, DeleteTaskRequest, Task, TaskStatus, UpdateTaskRequest
+from .transcription import TranscriptionResponse
 
-__all__ = ["HealthResponse", "TranscriptionResponse", "transcription"]
+__all__ = [
+    "CreateTaskRequest",
+    "DeleteTaskRequest",
+    "HealthResponse",
+    "Task",
+    "TaskStatus",
+    "TranscriptionResponse",
+    "UpdateTaskRequest",
+    "core",
+    "tasks",
+    "transcription",
+]

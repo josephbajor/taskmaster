@@ -1,0 +1,13 @@
+service:
+  auth: false
+  base-path: /api
+  endpoints:
+    getHealth:
+      method: GET
+      path: /health
+      response: HealthResponse
+
+types:
+  HealthResponse:
+    properties:
+      status: string

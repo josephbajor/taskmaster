@@ -2,6 +2,6 @@
 
 # isort: skip_file
 
-from .types import TranscriptionResponse
+from .service import AbstractCoreService
 
-__all__ = ["TranscriptionResponse"]
+__all__ = ["AbstractCoreService"]

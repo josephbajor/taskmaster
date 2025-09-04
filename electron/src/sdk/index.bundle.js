@@ -7,8 +7,28 @@ var __export = (target, all) => {
 // src/sdk/api/index.ts
 var api_exports = {};
 __export(api_exports, {
+  TaskStatus: () => TaskStatus,
+  core: () => core_exports,
+  tasks: () => tasks_exports,
   transcription: () => transcription_exports
 });
+
+// src/sdk/api/resources/core/index.ts
+var core_exports = {};
+
+// src/sdk/api/resources/tasks/index.ts
+var tasks_exports = {};
+__export(tasks_exports, {
+  TaskStatus: () => TaskStatus
+});
+
+// src/sdk/api/resources/tasks/types/TaskStatus.ts
+var TaskStatus = {
+  Todo: "TODO",
+  InProgress: "IN_PROGRESS",
+  Completed: "COMPLETED",
+  Cancelled: "CANCELLED"
+};
 
 // src/sdk/api/resources/transcription/index.ts
 var transcription_exports = {};
@@ -900,17 +920,17 @@ var TaskmasterTaskmasterEnvironment = {
   Local: "http://127.0.0.1:8000"
 };
 
-// src/sdk/api/resources/transcription/client/Client.ts
-var Transcription = class {
+// src/sdk/api/resources/core/client/Client.ts
+var Core = class {
   _options;
   constructor(_options = {}) {
     this._options = _options;
   }
   /**
-   * @param {Transcription.RequestOptions} requestOptions - Request-specific configuration.
+   * @param {Core.RequestOptions} requestOptions - Request-specific configuration.
    *
    * @example
-   *     await client.transcription.getHealth()
+   *     await client.core.getHealth()
    */
   getHealth(requestOptions) {
     return HttpResponsePromise.fromPromise(this.__getHealth(requestOptions));
@@ -954,6 +974,199 @@ var Transcription = class {
           rawResponse: _response.rawResponse
         });
     }
+  }
+};
+
+// src/sdk/api/resources/tasks/client/Client.ts
+var Tasks = class {
+  _options;
+  constructor(_options = {}) {
+    this._options = _options;
+  }
+  /**
+   * @param {TaskmasterTaskmaster.CreateTaskRequest} request
+   * @param {Tasks.RequestOptions} requestOptions - Request-specific configuration.
+   *
+   * @example
+   *     await client.tasks.createTask({
+   *         title: "title",
+   *         description: "description",
+   *         status: "TODO",
+   *         priority: 1,
+   *         duration_seconds: 1,
+   *         deadline: undefined,
+   *         prerequisite_tasks: undefined
+   *     })
+   */
+  createTask(request, requestOptions) {
+    return HttpResponsePromise.fromPromise(this.__createTask(request, requestOptions));
+  }
+  async __createTask(request, requestOptions) {
+    let _headers = mergeHeaders(this._options?.headers, requestOptions?.headers);
+    const _response = await fetcher({
+      url: url_exports.join(
+        await Supplier.get(this._options.baseUrl) ?? await Supplier.get(this._options.environment) ?? TaskmasterTaskmasterEnvironment.Local,
+        "/api/create-task"
+      ),
+      method: "POST",
+      headers: _headers,
+      contentType: "application/json",
+      queryParameters: requestOptions?.queryParams,
+      requestType: "json",
+      body: request,
+      timeoutMs: requestOptions?.timeoutInSeconds != null ? requestOptions.timeoutInSeconds * 1e3 : 6e4,
+      maxRetries: requestOptions?.maxRetries,
+      abortSignal: requestOptions?.abortSignal
+    });
+    if (_response.ok) {
+      return { data: _response.body, rawResponse: _response.rawResponse };
+    }
+    if (_response.error.reason === "status-code") {
+      throw new TaskmasterTaskmasterError({
+        statusCode: _response.error.statusCode,
+        body: _response.error.body,
+        rawResponse: _response.rawResponse
+      });
+    }
+    switch (_response.error.reason) {
+      case "non-json":
+        throw new TaskmasterTaskmasterError({
+          statusCode: _response.error.statusCode,
+          body: _response.error.rawBody,
+          rawResponse: _response.rawResponse
+        });
+      case "timeout":
+        throw new TaskmasterTaskmasterTimeoutError(
+          "Timeout exceeded when calling POST /api/create-task."
+        );
+      case "unknown":
+        throw new TaskmasterTaskmasterError({
+          message: _response.error.errorMessage,
+          rawResponse: _response.rawResponse
+        });
+    }
+  }
+  /**
+   * @param {TaskmasterTaskmaster.UpdateTaskRequest} request
+   * @param {Tasks.RequestOptions} requestOptions - Request-specific configuration.
+   *
+   * @example
+   *     await client.tasks.updateTask({
+   *         title: "title",
+   *         description: undefined,
+   *         status: undefined,
+   *         priority: undefined,
+   *         duration_seconds: undefined,
+   *         deadline: undefined,
+   *         prerequisite_tasks: undefined
+   *     })
+   */
+  updateTask(request, requestOptions) {
+    return HttpResponsePromise.fromPromise(this.__updateTask(request, requestOptions));
+  }
+  async __updateTask(request, requestOptions) {
+    let _headers = mergeHeaders(this._options?.headers, requestOptions?.headers);
+    const _response = await fetcher({
+      url: url_exports.join(
+        await Supplier.get(this._options.baseUrl) ?? await Supplier.get(this._options.environment) ?? TaskmasterTaskmasterEnvironment.Local,
+        "/api/update-task"
+      ),
+      method: "PUT",
+      headers: _headers,
+      contentType: "application/json",
+      queryParameters: requestOptions?.queryParams,
+      requestType: "json",
+      body: request,
+      timeoutMs: requestOptions?.timeoutInSeconds != null ? requestOptions.timeoutInSeconds * 1e3 : 6e4,
+      maxRetries: requestOptions?.maxRetries,
+      abortSignal: requestOptions?.abortSignal
+    });
+    if (_response.ok) {
+      return { data: _response.body, rawResponse: _response.rawResponse };
+    }
+    if (_response.error.reason === "status-code") {
+      throw new TaskmasterTaskmasterError({
+        statusCode: _response.error.statusCode,
+        body: _response.error.body,
+        rawResponse: _response.rawResponse
+      });
+    }
+    switch (_response.error.reason) {
+      case "non-json":
+        throw new TaskmasterTaskmasterError({
+          statusCode: _response.error.statusCode,
+          body: _response.error.rawBody,
+          rawResponse: _response.rawResponse
+        });
+      case "timeout":
+        throw new TaskmasterTaskmasterTimeoutError(
+          "Timeout exceeded when calling PUT /api/update-task."
+        );
+      case "unknown":
+        throw new TaskmasterTaskmasterError({
+          message: _response.error.errorMessage,
+          rawResponse: _response.rawResponse
+        });
+    }
+  }
+  /**
+   * @param {Tasks.RequestOptions} requestOptions - Request-specific configuration.
+   *
+   * @example
+   *     await client.tasks.deleteTask()
+   */
+  deleteTask(requestOptions) {
+    return HttpResponsePromise.fromPromise(this.__deleteTask(requestOptions));
+  }
+  async __deleteTask(requestOptions) {
+    let _headers = mergeHeaders(this._options?.headers, requestOptions?.headers);
+    const _response = await fetcher({
+      url: url_exports.join(
+        await Supplier.get(this._options.baseUrl) ?? await Supplier.get(this._options.environment) ?? TaskmasterTaskmasterEnvironment.Local,
+        "/api/delete-task"
+      ),
+      method: "DELETE",
+      headers: _headers,
+      queryParameters: requestOptions?.queryParams,
+      timeoutMs: requestOptions?.timeoutInSeconds != null ? requestOptions.timeoutInSeconds * 1e3 : 6e4,
+      maxRetries: requestOptions?.maxRetries,
+      abortSignal: requestOptions?.abortSignal
+    });
+    if (_response.ok) {
+      return { data: _response.body, rawResponse: _response.rawResponse };
+    }
+    if (_response.error.reason === "status-code") {
+      throw new TaskmasterTaskmasterError({
+        statusCode: _response.error.statusCode,
+        body: _response.error.body,
+        rawResponse: _response.rawResponse
+      });
+    }
+    switch (_response.error.reason) {
+      case "non-json":
+        throw new TaskmasterTaskmasterError({
+          statusCode: _response.error.statusCode,
+          body: _response.error.rawBody,
+          rawResponse: _response.rawResponse
+        });
+      case "timeout":
+        throw new TaskmasterTaskmasterTimeoutError(
+          "Timeout exceeded when calling DELETE /api/delete-task."
+        );
+      case "unknown":
+        throw new TaskmasterTaskmasterError({
+          message: _response.error.errorMessage,
+          rawResponse: _response.rawResponse
+        });
+    }
+  }
+};
+
+// src/sdk/api/resources/transcription/client/Client.ts
+var Transcription = class {
+  _options;
+  constructor(_options = {}) {
+    this._options = _options;
   }
   /**
    * Transcribe uploaded audio file
@@ -1024,6 +1237,8 @@ var Transcription = class {
 // src/sdk/Client.ts
 var TaskmasterTaskmasterClient = class {
   _options;
+  _core;
+  _tasks;
   _transcription;
   constructor(_options = {}) {
     this._options = {
@@ -1037,6 +1252,12 @@ var TaskmasterTaskmasterClient = class {
         _options?.headers
       )
     };
+  }
+  get core() {
+    return this._core ??= new Core(this._options);
+  }
+  get tasks() {
+    return this._tasks ??= new Tasks(this._options);
   }
   get transcription() {
     return this._transcription ??= new Transcription(this._options);

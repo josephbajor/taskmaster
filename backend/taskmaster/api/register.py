@@ -11,6 +11,8 @@ import starlette.exceptions
 from .core.abstract_fern_service import AbstractFernService
 from .core.exceptions import default_exception_handler, fern_http_exception_handler, http_exception_handler
 from .core.exceptions.fern_http_exception import FernHTTPException
+from .resources.core.service.service import AbstractCoreService
+from .resources.tasks.service.service import AbstractTasksService
 from .resources.transcription.service.service import AbstractTranscriptionService
 from fastapi import params
 
@@ -18,9 +20,13 @@ from fastapi import params
 def register(
     _app: fastapi.FastAPI,
     *,
+    core: AbstractCoreService,
+    tasks: AbstractTasksService,
     transcription: AbstractTranscriptionService,
     dependencies: typing.Optional[typing.Sequence[params.Depends]] = None,
 ) -> None:
+    _app.include_router(__register_service(core), dependencies=dependencies)
+    _app.include_router(__register_service(tasks), dependencies=dependencies)
     _app.include_router(__register_service(transcription), dependencies=dependencies)
 
     _app.add_exception_handler(FernHTTPException, fern_http_exception_handler)  # type: ignore

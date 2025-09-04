@@ -2,7 +2,6 @@
 
 # isort: skip_file
 
-from .health_response import HealthResponse
 from .transcription_response import TranscriptionResponse
 
-__all__ = ["HealthResponse", "TranscriptionResponse"]
+__all__ = ["TranscriptionResponse"]

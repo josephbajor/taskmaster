@@ -1,0 +1,61 @@
+service:
+  auth: false
+  base-path: /api
+  endpoints:
+    createTask:
+      method: POST
+      path: /create-task
+      request: CreateTaskRequest
+      response: Task
+    updateTask:
+      method: PUT
+      path: /update-task
+      request: UpdateTaskRequest
+      response: Task
+    deleteTask:
+      method: DELETE
+      path: /delete-task
+      response: Task
+
+types:
+  Task:
+    properties:
+      id: uuid
+      title: string
+      description: string
+      status: TaskStatus
+      priority: integer
+      duration_seconds: integer
+      prerequisite_tasks: list<uuid>
+      deadline: optional<datetime>
+
+  CreateTaskRequest:
+    properties:
+      title: string
+      description: string
+      status: TaskStatus
+      priority: integer
+      duration_seconds: integer
+      deadline: optional<datetime>
+      prerequisite_tasks: optional<list<uuid>>
+
+  UpdateTaskRequest:
+    properties:
+      title: string
+      description: optional<string>
+      status: optional<TaskStatus>
+      priority: optional<integer>
+      duration_seconds: optional<integer>
+      deadline: optional<datetime>
+      prerequisite_tasks: optional<list<uuid>>
+
+  DeleteTaskRequest:
+    properties:
+      title: string
+
+  TaskStatus:
+    enum:
+      - TODO
+      - IN_PROGRESS
+      - COMPLETED
+      - CANCELLED

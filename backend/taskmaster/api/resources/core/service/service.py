@@ -10,12 +10,12 @@ import fastapi
 from ....core.abstract_fern_service import AbstractFernService
 from ....core.exceptions.fern_http_exception import FernHTTPException
 from ....core.route_args import get_route_args
-from ..types.transcription_response import TranscriptionResponse
+from ..types.health_response import HealthResponse
 
 
-class AbstractTranscriptionService(AbstractFernService):
+class AbstractCoreService(AbstractFernService):
     """
-    AbstractTranscriptionService is an abstract class containing the methods that you should implement.
+    AbstractCoreService is an abstract class containing the methods that you should implement.
 
     Each method is associated with an API route, which will be registered
     with FastAPI when you register your implementation using Fern's register()
@@ -23,11 +23,7 @@ class AbstractTranscriptionService(AbstractFernService):
     """
 
     @abc.abstractmethod
-    def create_transcription(self, *, file: fastapi.UploadFile) -> TranscriptionResponse:
-        """
-        Transcribe uploaded audio file
-        """
-        ...
+    def get_health(self) -> HealthResponse: ...
 
     """
     Below are internal methods used by Fern to register your implementation.
@@ -36,28 +32,26 @@ class AbstractTranscriptionService(AbstractFernService):
 
     @classmethod
     def _init_fern(cls, router: fastapi.APIRouter) -> None:
-        cls.__init_create_transcription(router=router)
+        cls.__init_get_health(router=router)
 
     @classmethod
-    def __init_create_transcription(cls, router: fastapi.APIRouter) -> None:
-        endpoint_function = inspect.signature(cls.create_transcription)
+    def __init_get_health(cls, router: fastapi.APIRouter) -> None:
+        endpoint_function = inspect.signature(cls.get_health)
         new_parameters: typing.List[inspect.Parameter] = []
         for index, (parameter_name, parameter) in enumerate(endpoint_function.parameters.items()):
             if index == 0:
                 new_parameters.append(parameter.replace(default=fastapi.Depends(cls)))
-            elif parameter_name == "file":
-                new_parameters.append(parameter.replace(default=fastapi.UploadFile))
             else:
                 new_parameters.append(parameter)
-        setattr(cls.create_transcription, "__signature__", endpoint_function.replace(parameters=new_parameters))
+        setattr(cls.get_health, "__signature__", endpoint_function.replace(parameters=new_parameters))
 
-        @functools.wraps(cls.create_transcription)
-        def wrapper(*args: typing.Any, **kwargs: typing.Any) -> TranscriptionResponse:
+        @functools.wraps(cls.get_health)
+        def wrapper(*args: typing.Any, **kwargs: typing.Any) -> HealthResponse:
             try:
-                return cls.create_transcription(*args, **kwargs)
+                return cls.get_health(*args, **kwargs)
             except FernHTTPException as e:
                 logging.getLogger(f"{cls.__module__}.{cls.__name__}").warn(
-                    f"Endpoint 'create_transcription' unexpectedly threw {e.__class__.__name__}. "
+                    f"Endpoint 'get_health' unexpectedly threw {e.__class__.__name__}. "
                     + f"If this was intentional, please add {e.__class__.__name__} to "
                     + "the endpoint's errors list in your Fern Definition."
                 )
@@ -65,11 +59,11 @@ class AbstractTranscriptionService(AbstractFernService):
 
         # this is necessary for FastAPI to find forward-ref'ed type hints.
         # https://github.com/tiangolo/fastapi/pull/5077
-        wrapper.__globals__.update(cls.create_transcription.__globals__)
+        wrapper.__globals__.update(cls.get_health.__globals__)
 
-        router.post(
-            path="/api/create-transcription",
-            response_model=TranscriptionResponse,
-            description=AbstractTranscriptionService.create_transcription.__doc__,
-            **get_route_args(cls.create_transcription, default_tag="transcription"),
+        router.get(
+            path="/api/health",
+            response_model=HealthResponse,
+            description=AbstractCoreService.get_health.__doc__,
+            **get_route_args(cls.get_health, default_tag="core"),
         )(wrapper)

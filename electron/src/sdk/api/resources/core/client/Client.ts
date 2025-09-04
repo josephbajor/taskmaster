@@ -5,10 +5,10 @@
 import * as environments from "../../../../environments.js";
 import * as core from "../../../../core/index.js";
 import * as TaskmasterTaskmaster from "../../../index.js";
-import { mergeHeaders, mergeOnlyDefinedHeaders } from "../../../../core/headers.js";
+import { mergeHeaders } from "../../../../core/headers.js";
 import * as errors from "../../../../errors/index.js";
 
-export declare namespace Transcription {
+export declare namespace Core {
     export interface Options {
         environment?: core.Supplier<environments.TaskmasterTaskmasterEnvironment | string>;
         /** Specify a custom URL to connect the client to. */
@@ -31,60 +31,45 @@ export declare namespace Transcription {
     }
 }
 
-export class Transcription {
-    protected readonly _options: Transcription.Options;
+export class Core {
+    protected readonly _options: Core.Options;
 
-    constructor(_options: Transcription.Options = {}) {
+    constructor(_options: Core.Options = {}) {
         this._options = _options;
     }
 
     /**
-     * Transcribe uploaded audio file
+     * @param {Core.RequestOptions} requestOptions - Request-specific configuration.
      *
-     * @param {TaskmasterTaskmaster.CreateTranscriptionRequest} request
-     * @param {Transcription.RequestOptions} requestOptions - Request-specific configuration.
+     * @example
+     *     await client.core.getHealth()
      */
-    public createTranscription(
-        request: TaskmasterTaskmaster.CreateTranscriptionRequest,
-        requestOptions?: Transcription.RequestOptions,
-    ): core.HttpResponsePromise<TaskmasterTaskmaster.TranscriptionResponse> {
-        return core.HttpResponsePromise.fromPromise(this.__createTranscription(request, requestOptions));
+    public getHealth(
+        requestOptions?: Core.RequestOptions,
+    ): core.HttpResponsePromise<TaskmasterTaskmaster.HealthResponse> {
+        return core.HttpResponsePromise.fromPromise(this.__getHealth(requestOptions));
     }
 
-    private async __createTranscription(
-        request: TaskmasterTaskmaster.CreateTranscriptionRequest,
-        requestOptions?: Transcription.RequestOptions,
-    ): Promise<core.WithRawResponse<TaskmasterTaskmaster.TranscriptionResponse>> {
-        const _request = await core.newFormData();
-        await _request.appendFile("file", request.file);
-        const _maybeEncodedRequest = await _request.getRequest();
-        let _headers: core.Fetcher.Args["headers"] = mergeHeaders(
-            this._options?.headers,
-            mergeOnlyDefinedHeaders({ ..._maybeEncodedRequest.headers }),
-            requestOptions?.headers,
-        );
+    private async __getHealth(
+        requestOptions?: Core.RequestOptions,
+    ): Promise<core.WithRawResponse<TaskmasterTaskmaster.HealthResponse>> {
+        let _headers: core.Fetcher.Args["headers"] = mergeHeaders(this._options?.headers, requestOptions?.headers);
         const _response = await core.fetcher({
             url: core.url.join(
                 (await core.Supplier.get(this._options.baseUrl)) ??
                     (await core.Supplier.get(this._options.environment)) ??
                     environments.TaskmasterTaskmasterEnvironment.Local,
-                "/api/create-transcription",
+                "/api/health",
             ),
-            method: "POST",
+            method: "GET",
             headers: _headers,
             queryParameters: requestOptions?.queryParams,
-            requestType: "file",
-            duplex: _maybeEncodedRequest.duplex,
-            body: _maybeEncodedRequest.body,
             timeoutMs: requestOptions?.timeoutInSeconds != null ? requestOptions.timeoutInSeconds * 1000 : 60000,
             maxRetries: requestOptions?.maxRetries,
             abortSignal: requestOptions?.abortSignal,
         });
         if (_response.ok) {
-            return {
-                data: _response.body as TaskmasterTaskmaster.TranscriptionResponse,
-                rawResponse: _response.rawResponse,
-            };
+            return { data: _response.body as TaskmasterTaskmaster.HealthResponse, rawResponse: _response.rawResponse };
         }
 
         if (_response.error.reason === "status-code") {
@@ -103,9 +88,7 @@ export class Transcription {
                     rawResponse: _response.rawResponse,
                 });
             case "timeout":
-                throw new errors.TaskmasterTaskmasterTimeoutError(
-                    "Timeout exceeded when calling POST /api/create-transcription.",
-                );
+                throw new errors.TaskmasterTaskmasterTimeoutError("Timeout exceeded when calling GET /api/health.");
             case "unknown":
                 throw new errors.TaskmasterTaskmasterError({
                     message: _response.error.errorMessage,

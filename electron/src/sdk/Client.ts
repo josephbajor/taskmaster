@@ -5,6 +5,8 @@
 import * as environments from "./environments.js";
 import * as core from "./core/index.js";
 import { mergeHeaders } from "./core/headers.js";
+import { Core } from "./api/resources/core/client/Client.js";
+import { Tasks } from "./api/resources/tasks/client/Client.js";
 import { Transcription } from "./api/resources/transcription/client/Client.js";
 
 export declare namespace TaskmasterTaskmasterClient {
@@ -32,6 +34,8 @@ export declare namespace TaskmasterTaskmasterClient {
 
 export class TaskmasterTaskmasterClient {
     protected readonly _options: TaskmasterTaskmasterClient.Options;
+    protected _core: Core | undefined;
+    protected _tasks: Tasks | undefined;
     protected _transcription: Transcription | undefined;
 
     constructor(_options: TaskmasterTaskmasterClient.Options = {}) {
@@ -46,6 +50,14 @@ export class TaskmasterTaskmasterClient {
                 _options?.headers,
             ),
         };
+    }
+
+    public get core(): Core {
+        return (this._core ??= new Core(this._options));
+    }
+
+    public get tasks(): Tasks {
+        return (this._tasks ??= new Tasks(this._options));
     }
 
     public get transcription(): Transcription {
