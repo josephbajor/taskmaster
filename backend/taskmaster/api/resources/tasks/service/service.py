@@ -11,6 +11,8 @@ from ....core.abstract_fern_service import AbstractFernService
 from ....core.exceptions.fern_http_exception import FernHTTPException
 from ....core.route_args import get_route_args
 from ..types.create_task_request import CreateTaskRequest
+from ..types.generate_tasks_request import GenerateTasksRequest
+from ..types.generate_tasks_response import GenerateTasksResponse
 from ..types.task import Task
 from ..types.update_task_request import UpdateTaskRequest
 
@@ -36,6 +38,9 @@ class AbstractTasksService(AbstractFernService):
     @abc.abstractmethod
     def get_tasks(self) -> typing.Sequence[Task]: ...
 
+    @abc.abstractmethod
+    def generate_tasks(self, *, body: GenerateTasksRequest) -> GenerateTasksResponse: ...
+
     """
     Below are internal methods used by Fern to register your implementation.
     You can ignore them.
@@ -47,6 +52,7 @@ class AbstractTasksService(AbstractFernService):
         cls.__init_update_task(router=router)
         cls.__init_delete_task(router=router)
         cls.__init_get_tasks(router=router)
+        cls.__init_generate_tasks(router=router)
 
     @classmethod
     def __init_create_task(cls, router: fastapi.APIRouter) -> None:
@@ -186,4 +192,40 @@ class AbstractTasksService(AbstractFernService):
             response_model=typing.Sequence[Task],
             description=AbstractTasksService.get_tasks.__doc__,
             **get_route_args(cls.get_tasks, default_tag="tasks"),
+        )(wrapper)
+
+    @classmethod
+    def __init_generate_tasks(cls, router: fastapi.APIRouter) -> None:
+        endpoint_function = inspect.signature(cls.generate_tasks)
+        new_parameters: typing.List[inspect.Parameter] = []
+        for index, (parameter_name, parameter) in enumerate(endpoint_function.parameters.items()):
+            if index == 0:
+                new_parameters.append(parameter.replace(default=fastapi.Depends(cls)))
+            elif parameter_name == "body":
+                new_parameters.append(parameter.replace(default=fastapi.Body(...)))
+            else:
+                new_parameters.append(parameter)
+        setattr(cls.generate_tasks, "__signature__", endpoint_function.replace(parameters=new_parameters))
+
+        @functools.wraps(cls.generate_tasks)
+        def wrapper(*args: typing.Any, **kwargs: typing.Any) -> GenerateTasksResponse:
+            try:
+                return cls.generate_tasks(*args, **kwargs)
+            except FernHTTPException as e:
+                logging.getLogger(f"{cls.__module__}.{cls.__name__}").warn(
+                    f"Endpoint 'generate_tasks' unexpectedly threw {e.__class__.__name__}. "
+                    + f"If this was intentional, please add {e.__class__.__name__} to "
+                    + "the endpoint's errors list in your Fern Definition."
+                )
+                raise e
+
+        # this is necessary for FastAPI to find forward-ref'ed type hints.
+        # https://github.com/tiangolo/fastapi/pull/5077
+        wrapper.__globals__.update(cls.generate_tasks.__globals__)
+
+        router.post(
+            path="/api/generate-tasks",
+            response_model=GenerateTasksResponse,
+            description=AbstractTasksService.generate_tasks.__doc__,
+            **get_route_args(cls.generate_tasks, default_tag="tasks"),
         )(wrapper)

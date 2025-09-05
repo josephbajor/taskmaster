@@ -20,6 +20,11 @@ service:
       method: GET
       path: /get-tasks
       response: list<Task>
+    generateTasks:
+      method: POST
+      path: /generate-tasks
+      request: GenerateTasksRequest
+      response: GenerateTasksResponse
 
 types:
   Task:

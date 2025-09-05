@@ -303,4 +303,77 @@ export class Tasks {
                 });
         }
     }
+
+    /**
+     * @param {TaskmasterTaskmaster.GenerateTasksRequest} request
+     * @param {Tasks.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @example
+     *     await client.tasks.generateTasks({
+     *         transcript: "transcript",
+     *         existing_tasks: undefined
+     *     })
+     */
+    public generateTasks(
+        request: TaskmasterTaskmaster.GenerateTasksRequest,
+        requestOptions?: Tasks.RequestOptions,
+    ): core.HttpResponsePromise<TaskmasterTaskmaster.GenerateTasksResponse> {
+        return core.HttpResponsePromise.fromPromise(this.__generateTasks(request, requestOptions));
+    }
+
+    private async __generateTasks(
+        request: TaskmasterTaskmaster.GenerateTasksRequest,
+        requestOptions?: Tasks.RequestOptions,
+    ): Promise<core.WithRawResponse<TaskmasterTaskmaster.GenerateTasksResponse>> {
+        let _headers: core.Fetcher.Args["headers"] = mergeHeaders(this._options?.headers, requestOptions?.headers);
+        const _response = await core.fetcher({
+            url: core.url.join(
+                (await core.Supplier.get(this._options.baseUrl)) ??
+                    (await core.Supplier.get(this._options.environment)) ??
+                    environments.TaskmasterTaskmasterEnvironment.Local,
+                "/api/generate-tasks",
+            ),
+            method: "POST",
+            headers: _headers,
+            contentType: "application/json",
+            queryParameters: requestOptions?.queryParams,
+            requestType: "json",
+            body: request,
+            timeoutMs: requestOptions?.timeoutInSeconds != null ? requestOptions.timeoutInSeconds * 1000 : 60000,
+            maxRetries: requestOptions?.maxRetries,
+            abortSignal: requestOptions?.abortSignal,
+        });
+        if (_response.ok) {
+            return {
+                data: _response.body as TaskmasterTaskmaster.GenerateTasksResponse,
+                rawResponse: _response.rawResponse,
+            };
+        }
+
+        if (_response.error.reason === "status-code") {
+            throw new errors.TaskmasterTaskmasterError({
+                statusCode: _response.error.statusCode,
+                body: _response.error.body,
+                rawResponse: _response.rawResponse,
+            });
+        }
+
+        switch (_response.error.reason) {
+            case "non-json":
+                throw new errors.TaskmasterTaskmasterError({
+                    statusCode: _response.error.statusCode,
+                    body: _response.error.rawBody,
+                    rawResponse: _response.rawResponse,
+                });
+            case "timeout":
+                throw new errors.TaskmasterTaskmasterTimeoutError(
+                    "Timeout exceeded when calling POST /api/generate-tasks.",
+                );
+            case "unknown":
+                throw new errors.TaskmasterTaskmasterError({
+                    message: _response.error.errorMessage,
+                    rawResponse: _response.rawResponse,
+                });
+        }
+    }
 }

@@ -3,12 +3,18 @@ from taskmaster.api.resources.tasks.types.task import Task
 from taskmaster.api.resources.tasks.types.create_task_request import CreateTaskRequest
 from taskmaster.api.resources.tasks.types.update_task_request import UpdateTaskRequest
 from taskmaster.api.resources.tasks.types.delete_task_request import DeleteTaskRequest
+from taskmaster.api.resources.tasks.types.generate_tasks_request import (
+    GenerateTasksRequest,
+)
+from taskmaster.api.resources.tasks.types.generate_tasks_response import (
+    GenerateTasksResponse,
+)
 from taskmaster.api.core.exceptions.fern_http_exception import FernHTTPException
 from taskmaster.db.session import get_db_session
 from sqlalchemy.orm import Session
 import fastapi
 
-from . import repo
+from taskmaster.services.task_management import repo
 
 
 class TasksService(AbstractTasksService):
@@ -38,3 +44,6 @@ class TasksService(AbstractTasksService):
 
     def get_tasks(self) -> list[Task]:
         return repo.list_tasks(self._db)
+
+    def generate_tasks(self, *, body: GenerateTasksRequest) -> GenerateTasksResponse:
+        return NotImplementedError
