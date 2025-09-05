@@ -18,6 +18,7 @@ taskmaster/
 - Node.js 18+ and npm
 - `uv` package manager (`curl -LsSf https://astral.sh/uv/install.sh | sh`) — manages Python for you
 - OpenAI API key (`OPENAI_API_KEY`)
+- PostgreSQL 16+ (for backend task management)
 
 ## One-command dev
 
@@ -34,6 +35,38 @@ This will:
 Note: Scripts auto-detect a system `fern` CLI (e.g., via Homebrew) and use it when available; otherwise they fallback to an npx-based CLI.
 
 If `OPENAI_API_KEY` is not set, you’ll see a warning and transcription requests will fail until you export it.
+
+## Database initialization (Postgres)
+
+Quick start on macOS (Homebrew):
+
+```
+brew install postgresql@16
+brew services start postgresql@16
+export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
+psql -d postgres -c "DO $$ BEGIN IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'taskmaster') THEN CREATE ROLE taskmaster LOGIN PASSWORD 'taskmaster'; END IF; END $$;"
+psql -d postgres -c "ALTER ROLE taskmaster CREATEDB;"
+createdb -O taskmaster taskmaster || true
+psql -d postgres -c "ALTER DATABASE taskmaster OWNER TO taskmaster;"
+```
+
+Environment variables:
+
+```
+# Runtime (backend)
+export DATABASE_URL="postgresql+asyncpg://taskmaster:taskmaster@localhost:5432/taskmaster"
+# Alembic (migrations)
+export ALEMBIC_DATABASE_URL="postgresql+psycopg://taskmaster:taskmaster@localhost:5432/taskmaster"
+```
+
+Apply migrations:
+
+```
+cd backend
+uv run alembic upgrade head
+```
+
+For detailed backend setup and troubleshooting, see `backend/README.md`.
 
 ## Running the backend (manual)
 

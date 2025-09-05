@@ -12,6 +12,12 @@ dependencies = [
     "pydantic>=2.6",
     "starlette>=0.36",
     "ruff>=0.12.12",
+    "sqlalchemy>=2.0",
+    "alembic>=1.13",
+    "asyncpg>=0.29",
+    "psycopg[binary]>=3.2",
+    "pytest>=8",
+    "httpx>=0.27",
 ]
 
 [build-system]
@@ -20,3 +26,8 @@ build-backend = "setuptools.build_meta"
 
 [tool.uv]
 package = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["taskmaster*"]
+exclude = ["alembic*"]
