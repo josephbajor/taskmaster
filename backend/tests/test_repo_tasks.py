@@ -45,7 +45,9 @@ def test_update_task_by_title(db_session: Session) -> None:
     updated = repo.update_task_by_title(
         db_session,
         title="task-b",
-        body=UpdateTaskRequest(title="task-b", description="new", status=TaskStatus.IN_PROGRESS),
+        body=UpdateTaskRequest(
+            title="task-b", description="new", status=TaskStatus.IN_PROGRESS
+        ),
     )
     assert updated is not None
     assert updated.description == "new"

@@ -4,7 +4,7 @@ import contextlib
 import pytest
 from typing import Iterator
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 
 from taskmaster.db.base import Base
@@ -41,21 +41,42 @@ def db_session(_apply_migrations: None) -> Iterator[Session]:
     # Provide a clean transactional scope per test
     sync_url = os.environ["ALEMBIC_DATABASE_URL"]
     engine = create_engine(sync_url, future=True)
-    TestingSessionLocal = sessionmaker(
-        bind=engine, class_=Session, expire_on_commit=False
-    )
-    with TestingSessionLocal() as session:
-        # Begin a transaction and roll it back at the end to isolate tests
-        trans = session.begin()
+    connection = engine.connect()
+    # Ensure a clean state for each test without taking heavy ACCESS EXCLUSIVE locks
+    # that TRUNCATE would require (which can hang if another session holds locks).
+    # We perform a quick cleanup transaction prior to the test transaction.
+    try:
+        cleanup_trans = connection.begin()
+        connection.exec_driver_sql("DELETE FROM task_prerequisites")
+        connection.exec_driver_sql("DELETE FROM tasks")
+        cleanup_trans.commit()
+    except Exception:
+        # Best-effort cleanup; continue even if deletion fails. The nested
+        # transaction below still provides isolation for the test run itself.
         try:
-            yield session
-        finally:
-            try:
-                if trans.is_active:  # type: ignore[attr-defined]
-                    trans.rollback()
-            except Exception:
-                pass
-            session.close()
+            cleanup_trans.rollback()  # type: ignore[has-type]
+        except Exception:
+            pass
+    trans = connection.begin()
+    TestingSessionLocal = sessionmaker(
+        bind=connection, class_=Session, expire_on_commit=False
+    )
+    session = TestingSessionLocal()
+
+    # Start a SAVEPOINT so that even if code calls commit(), we can rollback
+    nested = session.begin_nested()
+
+    @event.listens_for(session, "after_transaction_end")
+    def _restart_savepoint(sess, transaction):  # type: ignore[no-redef]
+        if transaction.nested and not transaction._parent.nested:  # type: ignore[attr-defined]
+            sess.begin_nested()
+
+    try:
+        yield session
+    finally:
+        session.close()
+        trans.rollback()
+        connection.close()
 
 
 @pytest.fixture()
