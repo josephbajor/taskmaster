@@ -8,7 +8,7 @@ import * as TaskmasterTaskmaster from "../../../index.js";
 import { mergeHeaders } from "../../../../core/headers.js";
 import * as errors from "../../../../errors/index.js";
 
-export declare namespace Core {
+export declare namespace System {
     export interface Options {
         environment?: core.Supplier<environments.TaskmasterTaskmasterEnvironment | string>;
         /** Specify a custom URL to connect the client to. */
@@ -31,27 +31,27 @@ export declare namespace Core {
     }
 }
 
-export class Core {
-    protected readonly _options: Core.Options;
+export class System {
+    protected readonly _options: System.Options;
 
-    constructor(_options: Core.Options = {}) {
+    constructor(_options: System.Options = {}) {
         this._options = _options;
     }
 
     /**
-     * @param {Core.RequestOptions} requestOptions - Request-specific configuration.
+     * @param {System.RequestOptions} requestOptions - Request-specific configuration.
      *
      * @example
-     *     await client.core.getHealth()
+     *     await client.system.getHealth()
      */
     public getHealth(
-        requestOptions?: Core.RequestOptions,
+        requestOptions?: System.RequestOptions,
     ): core.HttpResponsePromise<TaskmasterTaskmaster.HealthResponse> {
         return core.HttpResponsePromise.fromPromise(this.__getHealth(requestOptions));
     }
 
     private async __getHealth(
-        requestOptions?: Core.RequestOptions,
+        requestOptions?: System.RequestOptions,
     ): Promise<core.WithRawResponse<TaskmasterTaskmaster.HealthResponse>> {
         let _headers: core.Fetcher.Args["headers"] = mergeHeaders(this._options?.headers, requestOptions?.headers);
         const _response = await core.fetcher({

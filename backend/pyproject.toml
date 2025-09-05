@@ -11,6 +11,7 @@ dependencies = [
     "openai>=1.40.0",
     "pydantic>=2.6",
     "starlette>=0.36",
+    "ruff>=0.12.12",
 ]
 
 [build-system]

@@ -5,7 +5,7 @@
 import * as environments from "./environments.js";
 import * as core from "./core/index.js";
 import { mergeHeaders } from "./core/headers.js";
-import { Core } from "./api/resources/core/client/Client.js";
+import { System } from "./api/resources/system/client/Client.js";
 import { Tasks } from "./api/resources/tasks/client/Client.js";
 import { Transcription } from "./api/resources/transcription/client/Client.js";
 
@@ -34,7 +34,7 @@ export declare namespace TaskmasterTaskmasterClient {
 
 export class TaskmasterTaskmasterClient {
     protected readonly _options: TaskmasterTaskmasterClient.Options;
-    protected _core: Core | undefined;
+    protected _system: System | undefined;
     protected _tasks: Tasks | undefined;
     protected _transcription: Transcription | undefined;
 
@@ -52,8 +52,8 @@ export class TaskmasterTaskmasterClient {
         };
     }
 
-    public get core(): Core {
-        return (this._core ??= new Core(this._options));
+    public get system(): System {
+        return (this._system ??= new System(this._options));
     }
 
     public get tasks(): Tasks {

@@ -1,5 +1,5 @@
-export * as core from "./core/index.js";
-export * from "./core/types/index.js";
+export * as system from "./system/index.js";
+export * from "./system/types/index.js";
 export * as tasks from "./tasks/index.js";
 export * from "./tasks/types/index.js";
 export * as transcription from "./transcription/index.js";

@@ -8,13 +8,13 @@ var __export = (target, all) => {
 var api_exports = {};
 __export(api_exports, {
   TaskStatus: () => TaskStatus,
-  core: () => core_exports,
+  system: () => system_exports,
   tasks: () => tasks_exports,
   transcription: () => transcription_exports
 });
 
-// src/sdk/api/resources/core/index.ts
-var core_exports = {};
+// src/sdk/api/resources/system/index.ts
+var system_exports = {};
 
 // src/sdk/api/resources/tasks/index.ts
 var tasks_exports = {};
@@ -920,17 +920,17 @@ var TaskmasterTaskmasterEnvironment = {
   Local: "http://127.0.0.1:8000"
 };
 
-// src/sdk/api/resources/core/client/Client.ts
-var Core = class {
+// src/sdk/api/resources/system/client/Client.ts
+var System = class {
   _options;
   constructor(_options = {}) {
     this._options = _options;
   }
   /**
-   * @param {Core.RequestOptions} requestOptions - Request-specific configuration.
+   * @param {System.RequestOptions} requestOptions - Request-specific configuration.
    *
    * @example
-   *     await client.core.getHealth()
+   *     await client.system.getHealth()
    */
   getHealth(requestOptions) {
     return HttpResponsePromise.fromPromise(this.__getHealth(requestOptions));
@@ -1237,7 +1237,7 @@ var Transcription = class {
 // src/sdk/Client.ts
 var TaskmasterTaskmasterClient = class {
   _options;
-  _core;
+  _system;
   _tasks;
   _transcription;
   constructor(_options = {}) {
@@ -1253,8 +1253,8 @@ var TaskmasterTaskmasterClient = class {
       )
     };
   }
-  get core() {
-    return this._core ??= new Core(this._options);
+  get system() {
+    return this._system ??= new System(this._options);
   }
   get tasks() {
     return this._tasks ??= new Tasks(this._options);

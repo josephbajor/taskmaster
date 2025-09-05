@@ -13,9 +13,9 @@ from ....core.route_args import get_route_args
 from ..types.health_response import HealthResponse
 
 
-class AbstractCoreService(AbstractFernService):
+class AbstractSystemService(AbstractFernService):
     """
-    AbstractCoreService is an abstract class containing the methods that you should implement.
+    AbstractSystemService is an abstract class containing the methods that you should implement.
 
     Each method is associated with an API route, which will be registered
     with FastAPI when you register your implementation using Fern's register()
@@ -64,6 +64,6 @@ class AbstractCoreService(AbstractFernService):
         router.get(
             path="/api/health",
             response_model=HealthResponse,
-            description=AbstractCoreService.get_health.__doc__,
-            **get_route_args(cls.get_health, default_tag="core"),
+            description=AbstractSystemService.get_health.__doc__,
+            **get_route_args(cls.get_health, default_tag="system"),
         )(wrapper)

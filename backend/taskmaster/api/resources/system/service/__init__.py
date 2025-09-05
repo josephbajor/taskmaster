@@ -2,6 +2,6 @@
 
 # isort: skip_file
 
-from .service import AbstractCoreService
+from .service import AbstractSystemService
 
-__all__ = ["AbstractCoreService"]
+__all__ = ["AbstractSystemService"]

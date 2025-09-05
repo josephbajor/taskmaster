@@ -10,7 +10,7 @@ from .resources import (
     TaskStatus,
     TranscriptionResponse,
     UpdateTaskRequest,
-    core,
+    system,
     tasks,
     transcription,
 )
@@ -23,7 +23,7 @@ __all__ = [
     "TaskStatus",
     "TranscriptionResponse",
     "UpdateTaskRequest",
-    "core",
+    "system",
     "tasks",
     "transcription",
 ]
