@@ -1071,7 +1071,7 @@ var Tasks = class {
         await Supplier.get(this._options.baseUrl) ?? await Supplier.get(this._options.environment) ?? TaskmasterTaskmasterEnvironment.Local,
         "/api/update-task"
       ),
-      method: "PUT",
+      method: "POST",
       headers: _headers,
       contentType: "application/json",
       queryParameters: requestOptions?.queryParams,
@@ -1100,7 +1100,7 @@ var Tasks = class {
         });
       case "timeout":
         throw new TaskmasterTaskmasterTimeoutError(
-          "Timeout exceeded when calling PUT /api/update-task."
+          "Timeout exceeded when calling POST /api/update-task."
         );
       case "unknown":
         throw new TaskmasterTaskmasterError({
@@ -1125,7 +1125,7 @@ var Tasks = class {
         await Supplier.get(this._options.baseUrl) ?? await Supplier.get(this._options.environment) ?? TaskmasterTaskmasterEnvironment.Local,
         "/api/delete-task"
       ),
-      method: "DELETE",
+      method: "POST",
       headers: _headers,
       queryParameters: requestOptions?.queryParams,
       timeoutMs: requestOptions?.timeoutInSeconds != null ? requestOptions.timeoutInSeconds * 1e3 : 6e4,
@@ -1151,7 +1151,7 @@ var Tasks = class {
         });
       case "timeout":
         throw new TaskmasterTaskmasterTimeoutError(
-          "Timeout exceeded when calling DELETE /api/delete-task."
+          "Timeout exceeded when calling POST /api/delete-task."
         );
       case "unknown":
         throw new TaskmasterTaskmasterError({

@@ -147,7 +147,7 @@ export class Tasks {
                     environments.TaskmasterTaskmasterEnvironment.Local,
                 "/api/update-task",
             ),
-            method: "PUT",
+            method: "POST",
             headers: _headers,
             contentType: "application/json",
             queryParameters: requestOptions?.queryParams,
@@ -178,7 +178,7 @@ export class Tasks {
                 });
             case "timeout":
                 throw new errors.TaskmasterTaskmasterTimeoutError(
-                    "Timeout exceeded when calling PUT /api/update-task.",
+                    "Timeout exceeded when calling POST /api/update-task.",
                 );
             case "unknown":
                 throw new errors.TaskmasterTaskmasterError({
@@ -209,7 +209,7 @@ export class Tasks {
                     environments.TaskmasterTaskmasterEnvironment.Local,
                 "/api/delete-task",
             ),
-            method: "DELETE",
+            method: "POST",
             headers: _headers,
             queryParameters: requestOptions?.queryParams,
             timeoutMs: requestOptions?.timeoutInSeconds != null ? requestOptions.timeoutInSeconds * 1000 : 60000,
@@ -237,7 +237,7 @@ export class Tasks {
                 });
             case "timeout":
                 throw new errors.TaskmasterTaskmasterTimeoutError(
-                    "Timeout exceeded when calling DELETE /api/delete-task.",
+                    "Timeout exceeded when calling POST /api/delete-task.",
                 );
             case "unknown":
                 throw new errors.TaskmasterTaskmasterError({

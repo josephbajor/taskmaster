@@ -113,7 +113,7 @@ class AbstractTasksService(AbstractFernService):
         # https://github.com/tiangolo/fastapi/pull/5077
         wrapper.__globals__.update(cls.update_task.__globals__)
 
-        router.put(
+        router.post(
             path="/api/update-task",
             response_model=Task,
             description=AbstractTasksService.update_task.__doc__,
@@ -147,7 +147,7 @@ class AbstractTasksService(AbstractFernService):
         # https://github.com/tiangolo/fastapi/pull/5077
         wrapper.__globals__.update(cls.delete_task.__globals__)
 
-        router.delete(
+        router.post(
             path="/api/delete-task",
             response_model=Task,
             description=AbstractTasksService.delete_task.__doc__,

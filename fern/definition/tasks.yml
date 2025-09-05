@@ -8,12 +8,12 @@ service:
       request: CreateTaskRequest
       response: Task
     updateTask:
-      method: PUT
+      method: POST
       path: /update-task
       request: UpdateTaskRequest
       response: Task
     deleteTask:
-      method: DELETE
+      method: POST
       path: /delete-task
       response: Task
     getTasks:

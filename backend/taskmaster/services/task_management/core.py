@@ -2,6 +2,7 @@ from taskmaster.api.resources.tasks.service.service import AbstractTasksService
 from taskmaster.api.resources.tasks.types.task import Task, TaskStatus
 from taskmaster.api.resources.tasks.types.create_task_request import CreateTaskRequest
 from taskmaster.api.resources.tasks.types.update_task_request import UpdateTaskRequest
+from taskmaster.api.resources.tasks.types.delete_task_request import DeleteTaskRequest
 import uuid
 
 
@@ -30,17 +31,8 @@ class TasksService(AbstractTasksService):
             deadline=body.deadline,
         )
 
-    def delete_task(self) -> Task:
-        return Task(
-            id=uuid.uuid4(),
-            title="",
-            description="",
-            status=TaskStatus.TODO,
-            priority=0,
-            duration_seconds=0,
-            prerequisite_tasks=[],
-            deadline=None,
-        )
+    def delete_task(self, *, body: DeleteTaskRequest) -> Task:
+        return NotImplementedError("WIP")
 
     def get_tasks(self) -> list[Task]:
         return NotImplementedError("WIP")
