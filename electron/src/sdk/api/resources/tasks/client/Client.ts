@@ -246,4 +246,61 @@ export class Tasks {
                 });
         }
     }
+
+    /**
+     * @param {Tasks.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @example
+     *     await client.tasks.getTasks()
+     */
+    public getTasks(requestOptions?: Tasks.RequestOptions): core.HttpResponsePromise<TaskmasterTaskmaster.Task[]> {
+        return core.HttpResponsePromise.fromPromise(this.__getTasks(requestOptions));
+    }
+
+    private async __getTasks(
+        requestOptions?: Tasks.RequestOptions,
+    ): Promise<core.WithRawResponse<TaskmasterTaskmaster.Task[]>> {
+        let _headers: core.Fetcher.Args["headers"] = mergeHeaders(this._options?.headers, requestOptions?.headers);
+        const _response = await core.fetcher({
+            url: core.url.join(
+                (await core.Supplier.get(this._options.baseUrl)) ??
+                    (await core.Supplier.get(this._options.environment)) ??
+                    environments.TaskmasterTaskmasterEnvironment.Local,
+                "/api/get-tasks",
+            ),
+            method: "GET",
+            headers: _headers,
+            queryParameters: requestOptions?.queryParams,
+            timeoutMs: requestOptions?.timeoutInSeconds != null ? requestOptions.timeoutInSeconds * 1000 : 60000,
+            maxRetries: requestOptions?.maxRetries,
+            abortSignal: requestOptions?.abortSignal,
+        });
+        if (_response.ok) {
+            return { data: _response.body as TaskmasterTaskmaster.Task[], rawResponse: _response.rawResponse };
+        }
+
+        if (_response.error.reason === "status-code") {
+            throw new errors.TaskmasterTaskmasterError({
+                statusCode: _response.error.statusCode,
+                body: _response.error.body,
+                rawResponse: _response.rawResponse,
+            });
+        }
+
+        switch (_response.error.reason) {
+            case "non-json":
+                throw new errors.TaskmasterTaskmasterError({
+                    statusCode: _response.error.statusCode,
+                    body: _response.error.rawBody,
+                    rawResponse: _response.rawResponse,
+                });
+            case "timeout":
+                throw new errors.TaskmasterTaskmasterTimeoutError("Timeout exceeded when calling GET /api/get-tasks.");
+            case "unknown":
+                throw new errors.TaskmasterTaskmasterError({
+                    message: _response.error.errorMessage,
+                    rawResponse: _response.rawResponse,
+                });
+        }
+    }
 }

@@ -1160,6 +1160,55 @@ var Tasks = class {
         });
     }
   }
+  /**
+   * @param {Tasks.RequestOptions} requestOptions - Request-specific configuration.
+   *
+   * @example
+   *     await client.tasks.getTasks()
+   */
+  getTasks(requestOptions) {
+    return HttpResponsePromise.fromPromise(this.__getTasks(requestOptions));
+  }
+  async __getTasks(requestOptions) {
+    let _headers = mergeHeaders(this._options?.headers, requestOptions?.headers);
+    const _response = await fetcher({
+      url: url_exports.join(
+        await Supplier.get(this._options.baseUrl) ?? await Supplier.get(this._options.environment) ?? TaskmasterTaskmasterEnvironment.Local,
+        "/api/get-tasks"
+      ),
+      method: "GET",
+      headers: _headers,
+      queryParameters: requestOptions?.queryParams,
+      timeoutMs: requestOptions?.timeoutInSeconds != null ? requestOptions.timeoutInSeconds * 1e3 : 6e4,
+      maxRetries: requestOptions?.maxRetries,
+      abortSignal: requestOptions?.abortSignal
+    });
+    if (_response.ok) {
+      return { data: _response.body, rawResponse: _response.rawResponse };
+    }
+    if (_response.error.reason === "status-code") {
+      throw new TaskmasterTaskmasterError({
+        statusCode: _response.error.statusCode,
+        body: _response.error.body,
+        rawResponse: _response.rawResponse
+      });
+    }
+    switch (_response.error.reason) {
+      case "non-json":
+        throw new TaskmasterTaskmasterError({
+          statusCode: _response.error.statusCode,
+          body: _response.error.rawBody,
+          rawResponse: _response.rawResponse
+        });
+      case "timeout":
+        throw new TaskmasterTaskmasterTimeoutError("Timeout exceeded when calling GET /api/get-tasks.");
+      case "unknown":
+        throw new TaskmasterTaskmasterError({
+          message: _response.error.errorMessage,
+          rawResponse: _response.rawResponse
+        });
+    }
+  }
 };
 
 // src/sdk/api/resources/transcription/client/Client.ts

@@ -16,6 +16,10 @@ service:
       method: DELETE
       path: /delete-task
       response: Task
+    getTasks:
+      method: GET
+      path: /get-tasks
+      response: list<Task>
 
 types:
   Task:

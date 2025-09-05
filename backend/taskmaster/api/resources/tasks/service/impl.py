@@ -41,3 +41,6 @@ class TasksService(AbstractTasksService):
             prerequisite_tasks=[],
             deadline=None,
         )
+
+    def get_tasks(self) -> list[Task]:
+        return NotImplementedError("WIP")
