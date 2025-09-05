@@ -1,0 +1,70 @@
+{
+  "tools": [
+    {
+      "name": "tasks.create_task_api_create_task_post",
+      "method": "POST",
+      "path": "/api/create-task",
+      "description": "Create Task",
+      "inputSchema": {
+        "$ref": "#/components/schemas/CreateTaskRequest"
+      },
+      "outputSchema": {
+        "$ref": "#/components/schemas/Task"
+      }
+    },
+    {
+      "name": "tasks.delete_task_api_delete_task_post",
+      "method": "POST",
+      "path": "/api/delete-task",
+      "description": "Delete Task",
+      "inputSchema": {
+        "$ref": "#/components/schemas/DeleteTaskRequest"
+      },
+      "outputSchema": {
+        "$ref": "#/components/schemas/Task"
+      }
+    },
+    {
+      "name": "tasks.generate_tasks_api_generate_tasks_post",
+      "method": "POST",
+      "path": "/api/generate-tasks",
+      "description": "Generate Tasks",
+      "inputSchema": {
+        "$ref": "#/components/schemas/GenerateTasksRequest"
+      },
+      "outputSchema": {
+        "$ref": "#/components/schemas/GenerateTasksResponse"
+      }
+    },
+    {
+      "name": "tasks.get_tasks_api_get_tasks_get",
+      "method": "GET",
+      "path": "/api/get-tasks",
+      "description": "Get Tasks",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": true
+      },
+      "outputSchema": {
+        "items": {
+          "$ref": "#/components/schemas/Task"
+        },
+        "type": "array",
+        "title": "Response Get Tasks Api Get Tasks Get"
+      }
+    },
+    {
+      "name": "tasks.update_task_api_update_task_post",
+      "method": "POST",
+      "path": "/api/update-task",
+      "description": "Update Task",
+      "inputSchema": {
+        "$ref": "#/components/schemas/UpdateTaskRequest"
+      },
+      "outputSchema": {
+        "$ref": "#/components/schemas/Task"
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "taskmaster-mcp-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Auto-generated MCP server for Taskmaster APIs",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.1.0"
+  }
+}

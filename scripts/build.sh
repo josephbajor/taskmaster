@@ -51,3 +51,18 @@ popd >/dev/null
 
 echo "[taskmaster] Done. SDKs should be available under electron/src/sdk and backend/taskmaster/api"
 
+
+# Export OpenAPI spec from FastAPI app (prefers uv) for downstream generators (e.g., MCP)
+echo "[taskmaster] Exporting OpenAPI spec"
+if command -v uv >/dev/null 2>&1; then
+	uv run --directory "$REPO_ROOT/backend" python scripts/export_openapi.py | cat
+else
+	echo "[taskmaster] 'uv' not found; attempting system python for OpenAPI export"
+	PYTHONPATH="$REPO_ROOT/backend:$PYTHONPATH" python "$REPO_ROOT/backend/scripts/export_openapi.py" | cat || \
+	  echo "[taskmaster] Warning: OpenAPI export failed; ensure uv or python is installed."
+fi
+
+# Generate MCP server (Node-based) from OpenAPI for tasks endpoints
+echo "[taskmaster] Generating MCP server from OpenAPI"
+node "$REPO_ROOT/mcp/generate_server.js" | cat || echo "[taskmaster] Warning: MCP generation failed"
+
