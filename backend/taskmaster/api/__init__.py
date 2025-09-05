@@ -5,6 +5,8 @@
 from .resources import (
     CreateTaskRequest,
     DeleteTaskRequest,
+    GenerateTasksRequest,
+    GenerateTasksResponse,
     HealthResponse,
     Task,
     TaskStatus,
@@ -18,6 +20,8 @@ from .resources import (
 __all__ = [
     "CreateTaskRequest",
     "DeleteTaskRequest",
+    "GenerateTasksRequest",
+    "GenerateTasksResponse",
     "HealthResponse",
     "Task",
     "TaskStatus",

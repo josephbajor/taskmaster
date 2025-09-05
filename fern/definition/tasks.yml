@@ -57,6 +57,15 @@ types:
     properties:
       title: string
 
+  GenerateTasksRequest:
+    properties:
+      transcript: string
+      existing_tasks: optional<list<Task>>
+
+  GenerateTasksResponse:
+    properties:
+      tasks: list<Task>
+
   TaskStatus:
     enum:
       - TODO

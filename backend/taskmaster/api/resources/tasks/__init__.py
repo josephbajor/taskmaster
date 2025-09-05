@@ -2,6 +2,22 @@
 
 # isort: skip_file
 
-from .types import CreateTaskRequest, DeleteTaskRequest, Task, TaskStatus, UpdateTaskRequest
+from .types import (
+    CreateTaskRequest,
+    DeleteTaskRequest,
+    GenerateTasksRequest,
+    GenerateTasksResponse,
+    Task,
+    TaskStatus,
+    UpdateTaskRequest,
+)
 
-__all__ = ["CreateTaskRequest", "DeleteTaskRequest", "Task", "TaskStatus", "UpdateTaskRequest"]
+__all__ = [
+    "CreateTaskRequest",
+    "DeleteTaskRequest",
+    "GenerateTasksRequest",
+    "GenerateTasksResponse",
+    "Task",
+    "TaskStatus",
+    "UpdateTaskRequest",
+]

@@ -4,8 +4,18 @@
 
 from .create_task_request import CreateTaskRequest
 from .delete_task_request import DeleteTaskRequest
+from .generate_tasks_request import GenerateTasksRequest
+from .generate_tasks_response import GenerateTasksResponse
 from .task import Task
 from .task_status import TaskStatus
 from .update_task_request import UpdateTaskRequest
 
-__all__ = ["CreateTaskRequest", "DeleteTaskRequest", "Task", "TaskStatus", "UpdateTaskRequest"]
+__all__ = [
+    "CreateTaskRequest",
+    "DeleteTaskRequest",
+    "GenerateTasksRequest",
+    "GenerateTasksResponse",
+    "Task",
+    "TaskStatus",
+    "UpdateTaskRequest",
+]

@@ -4,12 +4,22 @@
 
 from . import system, tasks, transcription
 from .system import HealthResponse
-from .tasks import CreateTaskRequest, DeleteTaskRequest, Task, TaskStatus, UpdateTaskRequest
+from .tasks import (
+    CreateTaskRequest,
+    DeleteTaskRequest,
+    GenerateTasksRequest,
+    GenerateTasksResponse,
+    Task,
+    TaskStatus,
+    UpdateTaskRequest,
+)
 from .transcription import TranscriptionResponse
 
 __all__ = [
     "CreateTaskRequest",
     "DeleteTaskRequest",
+    "GenerateTasksRequest",
+    "GenerateTasksResponse",
     "HealthResponse",
     "Task",
     "TaskStatus",
