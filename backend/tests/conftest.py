@@ -25,7 +25,7 @@ def _ensure_urls() -> None:
         "ALEMBIC_DATABASE_URL",
         "postgresql+psycopg://taskmaster:taskmaster@localhost:5432/taskmaster",
     )
-    os.environ.setdefault("DATABASE_URL", sync_url.replace("+psycopg", "+asyncpg"))
+    os.environ.setdefault("DATABASE_URL", sync_url)
     os.environ.setdefault("ALEMBIC_DATABASE_URL", sync_url)
 
 

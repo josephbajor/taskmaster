@@ -15,6 +15,9 @@ from sqlalchemy.orm import Session
 import fastapi
 
 from taskmaster.services.task_management import repo
+from taskmaster.services.task_management.generation.agent import (
+    generate_tasks_with_agent,
+)
 
 
 class TasksService(AbstractTasksService):
@@ -46,4 +49,11 @@ class TasksService(AbstractTasksService):
         return repo.list_tasks(self._db)
 
     def generate_tasks(self, *, body: GenerateTasksRequest) -> GenerateTasksResponse:
-        return NotImplementedError
+        # Ensure existing tasks are available to the agent
+        if body.existing_tasks is None:
+            body.existing_tasks = repo.list_tasks(self._db)
+        # Run multi-turn GPT-5 agent to perform task mutations via MCP tools
+        resp = generate_tasks_with_agent(body)
+        # If agent didn't return tasks, fall back to listing current tasks
+        tasks = resp.tasks or repo.list_tasks(self._db)
+        return GenerateTasksResponse(tasks=tasks)

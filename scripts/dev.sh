@@ -5,6 +5,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 BACKEND_DIR="$REPO_ROOT/backend"
 ELECTRON_DIR="$REPO_ROOT/electron"
+MCP_DIR="$REPO_ROOT/mcp/taskmaster-server"
 
 # Args / flags (defaults)
 BACKEND_DEBUG=0
@@ -44,6 +45,11 @@ cleanup() {
 		kill "$BACKEND_PID" || true
 		wait "$BACKEND_PID" 2>/dev/null || true
 	fi
+	if [[ -n "${MCP_PID:-}" ]] && kill -0 "$MCP_PID" >/dev/null 2>&1; then
+		echo "[dev] Stopping MCP server ($MCP_PID)"
+		kill "$MCP_PID" || true
+		wait "$MCP_PID" 2>/dev/null || true
+	fi
 }
 trap cleanup EXIT INT TERM
 
@@ -66,23 +72,27 @@ if [[ ! -d "$ELECTRON_DIR/src/sdk" || ! -d "$BACKEND_DIR/taskmaster/api" ]]; the
 	echo "[dev] Generated API/SDK not found. Run '$SCRIPT_DIR/build.sh' to generate with Fern." >&2
 fi
 
-# Electron deps
-if [[ ! -d "$ELECTRON_DIR/node_modules" ]]; then
-	echo "[dev] Installing Electron dependencies"
-	pushd "$ELECTRON_DIR" >/dev/null
-	if [[ -f package-lock.json ]]; then
-		npm ci
-	else
-		echo "[dev] Creating package-lock.json"
-		if npm install --package-lock-only; then
-			npm ci
-		else
-			echo "[dev] npm install --package-lock-only unsupported; running npm install"
-			npm install
-		fi
-	fi
-	popd >/dev/null
+# Ensure MCP server is generated
+if [[ ! -d "$MCP_DIR" ]]; then
+	echo "[dev] MCP server not found. Running build to generate it."
+	bash "$SCRIPT_DIR/build.sh"
 fi
+
+# Electron deps
+echo "[dev] Installing Electron dependencies"
+pushd "$ELECTRON_DIR" >/dev/null
+if [[ -f package-lock.json ]]; then
+    npm ci
+else
+    echo "[dev] Creating package-lock.json"
+    if npm install --package-lock-only; then
+        npm ci
+    else
+        echo "[dev] npm install --package-lock-only unsupported; running npm install"
+        npm install
+    fi
+fi
+popd >/dev/null
 
 # Start backend
 pushd "$BACKEND_DIR" >/dev/null
@@ -99,6 +109,19 @@ popd >/dev/null
 
 # Small wait for backend to boot
 sleep 1
+
+# Start MCP server (stdio) pointing at backend
+if [[ -d "$MCP_DIR" ]]; then
+	pushd "$MCP_DIR" >/dev/null
+	echo "[dev] Installing MCP server dependencies"
+	npm install
+	echo "[dev] Starting MCP server (stdio)"
+	TASKMASTER_BASE_URL="http://127.0.0.1:8000" npm start &
+	MCP_PID=$!
+	popd >/dev/null
+else
+	echo "[dev] Skipping MCP server startup; directory missing: $MCP_DIR" >&2
+fi
 
 # Start Electron (foreground)
 if [[ "$START_ELECTRON" == "1" ]]; then

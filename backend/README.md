@@ -43,7 +43,7 @@ psql -d postgres -c "ALTER DATABASE taskmaster OWNER TO taskmaster;"
 
 # Create backend/.env.db with URLs
 cat > backend/.env.db <<EOF
-DATABASE_URL="postgresql+asyncpg://taskmaster:taskmaster@localhost:5432/taskmaster"
+DATABASE_URL="postgresql+psycopg://taskmaster:taskmaster@localhost:5432/taskmaster"
 ALEMBIC_DATABASE_URL="postgresql+psycopg://taskmaster:taskmaster@localhost:5432/taskmaster"
 EOF
 

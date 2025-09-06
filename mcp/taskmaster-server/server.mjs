@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import fetch from 'node-fetch';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,29 +23,66 @@ const server = new Server({
   capabilities: { tools: {} }
 });
 
-for (const t of toolsSpec) {
-  server.tool({
-    name: t.name,
-    description: t.description,
-    inputSchema: t.inputSchema,
-    outputSchema: t.outputSchema,
-    handler: async (input) => {
-      const url = new URL(t.path, BASE_URL).toString();
-      const init = { method: t.method, headers: { 'Content-Type': 'application/json', ...AUTH_HEADER } };
-      if (t.method !== 'GET' && input && Object.keys(input).length) {
-        init.body = JSON.stringify(input);
+if (typeof server.tool === 'function') {
+  for (const t of toolsSpec) {
+    server.tool({
+      name: t.name,
+      description: t.description,
+      inputSchema: t.inputSchema,
+      outputSchema: t.outputSchema,
+      handler: async (input) => {
+        const url = new URL(t.path, BASE_URL).toString();
+        const init = { method: t.method, headers: { 'Content-Type': 'application/json', ...AUTH_HEADER } };
+        if (t.method !== 'GET' && input && Object.keys(input).length) {
+          init.body = JSON.stringify(input);
+        }
+        const res = await fetch(url, init);
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`HTTP ${res.status}: ${text}`);
+        }
+        const ct = res.headers.get('content-type') || '';
+        if (ct.includes('application/json')) {
+          return await res.json();
+        }
+        return { ok: true };
       }
-      const res = await fetch(url, init);
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`HTTP ${res.status}: ${text}`);
-      }
-      const ct = res.headers.get('content-type') || '';
-      if (ct.includes('application/json')) {
-        return await res.json();
-      }
-      return { ok: true };
+    });
+  }
+} else if (typeof server.setRequestHandler === 'function') {
+  // Register handlers using typed schemas
+  server.setRequestHandler(ListToolsRequestSchema, async () => {
+    return {
+      tools: toolsSpec.map((t) => ({
+        name: t.name,
+        description: t.description,
+        inputSchema: t.inputSchema,
+        outputSchema: t.outputSchema,
+      })),
+    };
+  });
+
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    const { name, arguments: args } = request.params || {};
+    const t = toolsSpec.find((x) => x.name === name);
+    if (!t) {
+      throw new Error(`Tool not found: ${name}`);
     }
+    const url = new URL(t.path, BASE_URL).toString();
+    const init = { method: t.method, headers: { 'Content-Type': 'application/json', ...AUTH_HEADER } };
+    if (t.method !== 'GET' && args && Object.keys(args).length) {
+      init.body = JSON.stringify(args);
+    }
+    const res = await fetch(url, init);
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`HTTP ${res.status}: ${text}`);
+    }
+    const ct = res.headers.get('content-type') || '';
+    if (ct.includes('application/json')) {
+      return await res.json();
+    }
+    return { ok: true };
   });
 }
 

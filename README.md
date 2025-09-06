@@ -54,7 +54,7 @@ Environment variables:
 
 ```
 # Runtime (backend)
-export DATABASE_URL="postgresql+asyncpg://taskmaster:taskmaster@localhost:5432/taskmaster"
+export DATABASE_URL="postgresql+psycopg://taskmaster:taskmaster@localhost:5432/taskmaster"
 # Alembic (migrations)
 export ALEMBIC_DATABASE_URL="postgresql+psycopg://taskmaster:taskmaster@localhost:5432/taskmaster"
 ```

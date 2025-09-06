@@ -1,6 +1,9 @@
 const micBtn = document.getElementById('micBtn')
 const statusEl = document.getElementById('status')
 const textInput = document.getElementById('textInput')
+const generateBtn = document.getElementById('generateBtn')
+const refreshBtn = document.getElementById('refreshBtn')
+const tasksList = document.getElementById('tasksList')
 
 let mediaRecorder = null
 let recordedChunks = []
@@ -111,3 +114,61 @@ window.addEventListener('error', (e) => {
 window.addEventListener('unhandledrejection', (e) => {
     console.error('[renderer] Unhandled rejection:', e.reason)
 })
+
+async function getClient() {
+    const { TaskmasterTaskmasterClient, TaskmasterTaskmasterEnvironment } = await import('./sdk/index.bundle.js')
+    return new TaskmasterTaskmasterClient({ environment: TaskmasterTaskmasterEnvironment.Local })
+}
+
+function renderTasks(tasks) {
+    tasksList.innerHTML = ''
+    if (!Array.isArray(tasks) || tasks.length === 0) {
+        tasksList.innerHTML = '<div class="task-item">No tasks yet.</div>'
+        return
+    }
+    for (const t of tasks) {
+        const div = document.createElement('div')
+        div.className = 'task-item'
+        const status = t.status || 'UNKNOWN'
+        const priority = typeof t.priority === 'number' ? `P${t.priority}` : ''
+        div.textContent = `${t.title} — ${status}${priority ? ` — ${priority}` : ''}`
+        tasksList.appendChild(div)
+    }
+}
+
+async function refreshTasks() {
+    try {
+        setStatus('Loading tasks…')
+        const client = await getClient()
+        const data = await client.tasks.getTasks()
+        renderTasks(data)
+        setStatus('Idle')
+    } catch (err) {
+        console.error('[renderer] Get tasks error:', err)
+        setStatus('Error')
+    }
+}
+
+async function generateTasks() {
+    const transcript = textInput.value || ''
+    if (!transcript.trim()) {
+        setStatus('Provide transcript text')
+        return
+    }
+    try {
+        setStatus('Generating tasks…')
+        const client = await getClient()
+        await client.tasks.generateTasks({ transcript, existing_tasks: undefined })
+        await refreshTasks()
+        setStatus('Idle')
+    } catch (err) {
+        console.error('[renderer] Generate tasks error:', err)
+        setStatus('Error')
+    }
+}
+
+generateBtn.addEventListener('click', generateTasks)
+refreshBtn.addEventListener('click', refreshTasks)
+
+// Initial load
+refreshTasks().catch(() => { })
