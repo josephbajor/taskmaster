@@ -13,21 +13,26 @@ from taskmaster.api.resources.tasks.types.generate_tasks_response import (
 )
 from taskmaster.api.resources.tasks.types.task import Task
 from taskmaster.config import get_settings
+from taskmaster.services.task_management.generation.prompt_loader import PromptLoader
+
+PROMPT_LOADER = PromptLoader()
+# TODO: Build proper agent object to abstract a lot of this functionality
 
 
 def _load_prompts() -> Dict[str, str]:
-    # Prompts are Python constants in the prompts module for easy versioning
-    from .prompts.generate_tasks import (
-        SYSTEM_PROMPT,
-        DEVELOPER_PROMPT,
-        USER_PROMPT_TEMPLATE,
-        ALLOWED_TOOL_NAMES,
-    )
+    # Render jinja2 templates to strings using the prompt loader
+    loader = PROMPT_LOADER
+    system = loader.render("system.md", variables={})
+    developer = loader.render("developer.md", variables={})
+    user_template = loader.get("user_template.md").render  # rendered later with vars
+
+    # Allowed tools remains JSON file content
+    from .prompts.generate_tasks import ALLOWED_TOOL_NAMES
 
     return {
-        "system": SYSTEM_PROMPT,
-        "developer": DEVELOPER_PROMPT,
-        "user_template": USER_PROMPT_TEMPLATE,
+        "system": system,
+        "developer": developer,
+        "user_template_fn": user_template,  # callable
         "allowed_tools_json": json.dumps(ALLOWED_TOOL_NAMES),
     }
 
@@ -43,9 +48,13 @@ def generate_tasks_with_agent(body: GenerateTasksRequest) -> GenerateTasksRespon
     settings = get_settings()
     client = OpenAI()
 
-    user_prompt = prompts["user_template"].format(
-        transcript=body.transcript,
-        existing_tasks_json=_serialize_tasks(body.existing_tasks),
+    # Render user prompt with required variables; loader checks missing/extra vars
+    user_prompt = default_loader().render(
+        "user_template.md",
+        variables={
+            "transcript": body.transcript,
+            "existing_tasks_json": _serialize_tasks(body.existing_tasks),
+        },
     )
 
     # Responses API style with multi-roles and tool allowances
@@ -58,11 +67,13 @@ def generate_tasks_with_agent(body: GenerateTasksRequest) -> GenerateTasksRespon
                 "role": "developer",
                 "content": prompts["developer"]
                 + "\nAllowed tools: "
-                + prompts["allowed_tools_json"],
+                + prompts[
+                    "allowed_tools_json"
+                ],  # TODO: Absolutely not, we should not include tool references in the developer prompt.
             },
             {"role": "user", "content": user_prompt},
         ],
-        tools=[
+        tools=[  # TODO: How are the tools included here surfaced to the model? Can we see them in traces?
             {
                 "type": "mcp",
                 "server": {
@@ -73,7 +84,7 @@ def generate_tasks_with_agent(body: GenerateTasksRequest) -> GenerateTasksRespon
                         "TASKMASTER_BASE_URL": settings.base_url,
                     },
                 },
-                "allowed_tools": [
+                "allowed_tools": [  # TODO: is this an actual parameter we can use?
                     "tasks.create_task_api_create_task_post",
                     "tasks.update_task_api_update_task_post",
                     "tasks.delete_task_api_delete_task_post",
