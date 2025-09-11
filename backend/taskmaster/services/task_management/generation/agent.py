@@ -16,6 +16,11 @@ from taskmaster.config import get_settings
 from taskmaster.services.task_management.generation.prompt_loader import PromptLoader
 
 PROMPT_LOADER = PromptLoader()
+ALLOWED_TOOLS = [
+    "tasks.create_task_api_create_task_post",
+    "tasks.update_task_api_update_task_post",
+    "tasks.delete_task_api_delete_task_post",
+]
 # TODO: Build proper agent object to abstract a lot of this functionality
 
 
@@ -27,13 +32,12 @@ def _load_prompts() -> Dict[str, str]:
     user_template = loader.get("user_template.md").render  # rendered later with vars
 
     # Allowed tools remains JSON file content
-    from .prompts.generate_tasks import ALLOWED_TOOL_NAMES
 
     return {
         "system": system,
         "developer": developer,
         "user_template_fn": user_template,  # callable
-        "allowed_tools_json": json.dumps(ALLOWED_TOOL_NAMES),
+        "allowed_tools_json": json.dumps(ALLOWED_TOOLS),
     }
 
 
@@ -49,7 +53,7 @@ def generate_tasks_with_agent(body: GenerateTasksRequest) -> GenerateTasksRespon
     client = OpenAI()
 
     # Render user prompt with required variables; loader checks missing/extra vars
-    user_prompt = default_loader().render(
+    user_prompt = PROMPT_LOADER.render(
         "user_template.md",
         variables={
             "transcript": body.transcript,

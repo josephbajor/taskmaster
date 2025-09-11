@@ -1,5 +1,0 @@
-[
-    "tasks.create_task_api_create_task_post",
-    "tasks.update_task_api_update_task_post",
-    "tasks.delete_task_api_delete_task_post"
-]
