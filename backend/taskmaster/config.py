@@ -37,6 +37,19 @@ class Settings(BaseSettings):
     openai_max_output_tokens: int = Field(
         default=2000, alias="OPENAI_MAX_OUTPUT_TOKENS"
     )
+    openai_api_key: Optional[str] = Field(default=None, alias="OPENAI_API_KEY")
+
+    # Database settings
+    database_url: Optional[str] = Field(default=None, alias="DATABASE_URL")
+    alembic_database_url: Optional[str] = Field(
+        default=None, alias="ALEMBIC_DATABASE_URL"
+    )
+
+    # Debugger settings (for local development)
+    backend_debug: bool = Field(default=False, alias="BACKEND_DEBUG")
+    backend_debug_wait: bool = Field(default=False, alias="BACKEND_DEBUG_WAIT")
+    backend_debug_host: str = Field(default="127.0.0.1", alias="BACKEND_DEBUG_HOST")
+    backend_debug_port: int = Field(default=5678, alias="BACKEND_DEBUG_PORT")
 
     def mcp_server_absolute_path(self) -> str:
         if not self.workspace_root:
@@ -44,6 +57,19 @@ class Settings(BaseSettings):
                 "TASKMASTER_WORKSPACE_ROOT must be set (absolute path to repo root)"
             )
         return str(Path(self.workspace_root) / self.mcp_server_relative_path)
+
+    def get_database_url(self) -> str:
+        if not self.database_url:
+            raise RuntimeError("DATABASE_URL must be set in configuration")
+        return self.database_url
+
+    def get_alembic_database_url(self) -> str:
+        url = self.alembic_database_url or self.database_url
+        if not url:
+            raise RuntimeError(
+                "ALEMBIC_DATABASE_URL or DATABASE_URL must be set in configuration"
+            )
+        return url
 
 
 _settings: Optional[Settings] = None

@@ -6,10 +6,138 @@
       "path": "/api/create-task",
       "description": "Create Task",
       "inputSchema": {
-        "$ref": "#/components/schemas/CreateTaskRequest"
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "TODO",
+              "IN_PROGRESS",
+              "COMPLETED",
+              "CANCELLED"
+            ],
+            "title": "TaskStatus"
+          },
+          "priority": {
+            "type": "integer",
+            "title": "Priority"
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "title": "Duration Seconds"
+          },
+          "deadline": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline"
+          },
+          "prerequisite_tasks": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prerequisite Tasks"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "description",
+          "status",
+          "priority",
+          "duration_seconds"
+        ],
+        "title": "CreateTaskRequest"
       },
       "outputSchema": {
-        "$ref": "#/components/schemas/Task"
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "TODO",
+              "IN_PROGRESS",
+              "COMPLETED",
+              "CANCELLED"
+            ],
+            "title": "TaskStatus"
+          },
+          "priority": {
+            "type": "integer",
+            "title": "Priority"
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "title": "Duration Seconds"
+          },
+          "prerequisite_tasks": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Prerequisite Tasks"
+          },
+          "deadline": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "description",
+          "status",
+          "priority",
+          "duration_seconds",
+          "prerequisite_tasks"
+        ],
+        "title": "Task"
       }
     },
     {
@@ -18,10 +146,85 @@
       "path": "/api/delete-task",
       "description": "Delete Task",
       "inputSchema": {
-        "$ref": "#/components/schemas/DeleteTaskRequest"
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "title": "DeleteTaskRequest"
       },
       "outputSchema": {
-        "$ref": "#/components/schemas/Task"
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "TODO",
+              "IN_PROGRESS",
+              "COMPLETED",
+              "CANCELLED"
+            ],
+            "title": "TaskStatus"
+          },
+          "priority": {
+            "type": "integer",
+            "title": "Priority"
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "title": "Duration Seconds"
+          },
+          "prerequisite_tasks": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Prerequisite Tasks"
+          },
+          "deadline": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "description",
+          "status",
+          "priority",
+          "duration_seconds",
+          "prerequisite_tasks"
+        ],
+        "title": "Task"
       }
     },
     {
@@ -30,10 +233,177 @@
       "path": "/api/generate-tasks",
       "description": "Generate Tasks",
       "inputSchema": {
-        "$ref": "#/components/schemas/GenerateTasksRequest"
+        "properties": {
+          "transcript": {
+            "type": "string",
+            "title": "Transcript"
+          },
+          "existing_tasks": {
+            "anyOf": [
+              {
+                "items": {
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "title": "Id"
+                    },
+                    "title": {
+                      "type": "string",
+                      "title": "Title"
+                    },
+                    "description": {
+                      "type": "string",
+                      "title": "Description"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "TODO",
+                        "IN_PROGRESS",
+                        "COMPLETED",
+                        "CANCELLED"
+                      ],
+                      "title": "TaskStatus"
+                    },
+                    "priority": {
+                      "type": "integer",
+                      "title": "Priority"
+                    },
+                    "duration_seconds": {
+                      "type": "integer",
+                      "title": "Duration Seconds"
+                    },
+                    "prerequisite_tasks": {
+                      "items": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "type": "array",
+                      "title": "Prerequisite Tasks"
+                    },
+                    "deadline": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "title": "Deadline"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "title",
+                    "description",
+                    "status",
+                    "priority",
+                    "duration_seconds",
+                    "prerequisite_tasks"
+                  ],
+                  "title": "Task"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Existing Tasks"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "transcript"
+        ],
+        "title": "GenerateTasksRequest"
       },
       "outputSchema": {
-        "$ref": "#/components/schemas/GenerateTasksResponse"
+        "properties": {
+          "tasks": {
+            "items": {
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Id"
+                },
+                "title": {
+                  "type": "string",
+                  "title": "Title"
+                },
+                "description": {
+                  "type": "string",
+                  "title": "Description"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "TODO",
+                    "IN_PROGRESS",
+                    "COMPLETED",
+                    "CANCELLED"
+                  ],
+                  "title": "TaskStatus"
+                },
+                "priority": {
+                  "type": "integer",
+                  "title": "Priority"
+                },
+                "duration_seconds": {
+                  "type": "integer",
+                  "title": "Duration Seconds"
+                },
+                "prerequisite_tasks": {
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "type": "array",
+                  "title": "Prerequisite Tasks"
+                },
+                "deadline": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Deadline"
+                }
+              },
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "id",
+                "title",
+                "description",
+                "status",
+                "priority",
+                "duration_seconds",
+                "prerequisite_tasks"
+              ],
+              "title": "Task"
+            },
+            "type": "array",
+            "title": "Tasks"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "tasks"
+        ],
+        "title": "GenerateTasksResponse"
       }
     },
     {
@@ -48,7 +418,71 @@
       },
       "outputSchema": {
         "items": {
-          "$ref": "#/components/schemas/Task"
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            },
+            "title": {
+              "type": "string",
+              "title": "Title"
+            },
+            "description": {
+              "type": "string",
+              "title": "Description"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "TODO",
+                "IN_PROGRESS",
+                "COMPLETED",
+                "CANCELLED"
+              ],
+              "title": "TaskStatus"
+            },
+            "priority": {
+              "type": "integer",
+              "title": "Priority"
+            },
+            "duration_seconds": {
+              "type": "integer",
+              "title": "Duration Seconds"
+            },
+            "prerequisite_tasks": {
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "type": "array",
+              "title": "Prerequisite Tasks"
+            },
+            "deadline": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Deadline"
+            }
+          },
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "id",
+            "title",
+            "description",
+            "status",
+            "priority",
+            "duration_seconds",
+            "prerequisite_tasks"
+          ],
+          "title": "Task"
         },
         "type": "array",
         "title": "Response Get Tasks Api Get Tasks Get"
@@ -60,10 +494,162 @@
       "path": "/api/update-task",
       "description": "Update Task",
       "inputSchema": {
-        "$ref": "#/components/schemas/UpdateTaskRequest"
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "TODO",
+                  "IN_PROGRESS",
+                  "COMPLETED",
+                  "CANCELLED"
+                ],
+                "title": "TaskStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
+          },
+          "duration_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Seconds"
+          },
+          "deadline": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline"
+          },
+          "prerequisite_tasks": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prerequisite Tasks"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "title": "UpdateTaskRequest"
       },
       "outputSchema": {
-        "$ref": "#/components/schemas/Task"
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "TODO",
+              "IN_PROGRESS",
+              "COMPLETED",
+              "CANCELLED"
+            ],
+            "title": "TaskStatus"
+          },
+          "priority": {
+            "type": "integer",
+            "title": "Priority"
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "title": "Duration Seconds"
+          },
+          "prerequisite_tasks": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Prerequisite Tasks"
+          },
+          "deadline": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "description",
+          "status",
+          "priority",
+          "duration_seconds",
+          "prerequisite_tasks"
+        ],
+        "title": "Task"
       }
     }
   ]

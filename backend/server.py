@@ -2,41 +2,27 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 import traceback
-import os
 import asyncio
 from fastapi.responses import JSONResponse
+from taskmaster.api.register import register as register_fern
+from taskmaster.services.system.core import SystemService
+from taskmaster.services.task_management.core import TasksService
+from taskmaster.services.transcription.core import TranscriptionService
+from taskmaster.config import get_settings
 
-# Load DB env from .env.db if present
-_ENV_DB_PATH = os.path.join(os.path.dirname(__file__), ".env.db")
-if os.path.isfile(_ENV_DB_PATH):
-    try:
-        with open(_ENV_DB_PATH, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith("#"):
-                    continue
-                if "=" in line:
-                    key, val = line.split("=", 1)
-                    key = key.strip()
-                    val = val.strip().strip('"')
-                    os.environ.setdefault(key, val)
-    except Exception:
-        logging.exception("Failed to load backend/.env.db")
+settings = get_settings()
 
 # Optional: enable debugpy when requested via environment variables
 _DEBUGPY = None
-_DEBUG_WAIT = os.getenv("BACKEND_DEBUG_WAIT") == "1"
-if os.getenv("BACKEND_DEBUG") == "1":
+_DEBUG_WAIT = settings.backend_debug_wait
+if settings.backend_debug:
     try:
         # debugpy is installed ad-hoc via `uv run --with debugpy` in dev.sh
         import debugpy  # type: ignore
 
         _DEBUGPY = debugpy
-        debug_host = os.getenv("BACKEND_DEBUG_HOST", "127.0.0.1")
-        try:
-            debug_port = int(os.getenv("BACKEND_DEBUG_PORT", "5678"))
-        except ValueError:
-            debug_port = 5678
+        debug_host = settings.backend_debug_host
+        debug_port = settings.backend_debug_port
 
         debugpy.listen((debug_host, debug_port))
         logging.getLogger(__name__).info(
@@ -44,11 +30,6 @@ if os.getenv("BACKEND_DEBUG") == "1":
         )
     except Exception:
         logging.exception("Failed to initialize debugpy; continuing without debugger")
-
-from taskmaster.api.register import register as register_fern
-from taskmaster.services.system.core import SystemService
-from taskmaster.services.task_management.core import TasksService
-from taskmaster.services.transcription.core import TranscriptionService
 
 app = FastAPI(title="Taskmaster API", version="0.1.0")
 

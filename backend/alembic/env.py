@@ -7,6 +7,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy import engine_from_config
 
 from alembic import context
+from taskmaster.config import get_settings
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -41,8 +42,9 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    # Use ALEMBIC_DATABASE_URL env var or fallback to ini
-    url = os.getenv("ALEMBIC_DATABASE_URL") or config.get_main_option("sqlalchemy.url")
+    # Use central settings as the single source of truth
+    settings = get_settings()
+    url = settings.get_alembic_database_url()
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -63,10 +65,11 @@ def do_run_migrations(connection: Connection) -> None:
 
 def run_sync_migrations() -> None:
     ini_section = config.get_section(config.config_ini_section, {})
-    env_url = os.getenv("ALEMBIC_DATABASE_URL")
-    if env_url:
-        ini_section = dict(ini_section)
-        ini_section["sqlalchemy.url"] = env_url
+    # Override ini with central settings URL
+    settings = get_settings()
+    url = settings.get_alembic_database_url()
+    ini_section = dict(ini_section)
+    ini_section["sqlalchemy.url"] = url
 
     connectable = engine_from_config(
         ini_section, prefix="sqlalchemy.", poolclass=pool.NullPool

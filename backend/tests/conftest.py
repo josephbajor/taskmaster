@@ -1,14 +1,14 @@
 import os
-import tempfile
-import contextlib
+import tempfile  # noqa: F401
+import contextlib  # noqa: F401
 import pytest
 from typing import Iterator
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 
-from taskmaster.db.base import Base
-from taskmaster.db.models.task import TaskRow  # ensure models import
+from taskmaster.db.base import Base  # noqa: F401  # ensure models import
+from taskmaster.db.models.task import TaskRow  # noqa: F401  # ensure models import
 from taskmaster.db.session import get_db_session
 from taskmaster.api.register import register as register_fern
 from taskmaster.services.system.core import SystemService
@@ -16,17 +16,21 @@ from taskmaster.services.task_management.core import TasksService
 from taskmaster.services.transcription.core import TranscriptionService
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from taskmaster.config import get_settings
 
 
 @pytest.fixture(scope="session", autouse=True)
 def _ensure_urls() -> None:
-    # Prefer a dedicated test database
-    sync_url = os.getenv(
-        "ALEMBIC_DATABASE_URL",
-        "postgresql+psycopg://taskmaster:taskmaster@localhost:5432/taskmaster",
+    # Prefer a dedicated test database configured via central settings
+    settings = get_settings()
+    # If tests didn't set a DB URL yet, default to local
+    default_sync = (
+        "postgresql+psycopg://taskmaster:taskmaster@localhost:5432/taskmaster"
     )
-    os.environ.setdefault("DATABASE_URL", sync_url)
-    os.environ.setdefault("ALEMBIC_DATABASE_URL", sync_url)
+    if not settings.database_url:
+        os.environ.setdefault("TASKMASTER_DATABASE_URL", default_sync)
+    if not settings.alembic_database_url:
+        os.environ.setdefault("TASKMASTER_ALEMBIC_DATABASE_URL", default_sync)
 
 
 @pytest.fixture(scope="session")
@@ -39,7 +43,8 @@ def _apply_migrations(_ensure_urls: None) -> None:
 @pytest.fixture()
 def db_session(_apply_migrations: None) -> Iterator[Session]:
     # Provide a clean transactional scope per test
-    sync_url = os.environ["ALEMBIC_DATABASE_URL"]
+    settings = get_settings()
+    sync_url = settings.get_alembic_database_url()
     engine = create_engine(sync_url, future=True)
     connection = engine.connect()
     # Ensure a clean state for each test without taking heavy ACCESS EXCLUSIVE locks
@@ -64,7 +69,7 @@ def db_session(_apply_migrations: None) -> Iterator[Session]:
     session = TestingSessionLocal()
 
     # Start a SAVEPOINT so that even if code calls commit(), we can rollback
-    nested = session.begin_nested()
+    session.begin_nested()
 
     @event.listens_for(session, "after_transaction_end")
     def _restart_savepoint(sess, transaction):  # type: ignore[no-redef]

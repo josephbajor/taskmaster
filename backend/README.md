@@ -22,7 +22,7 @@ You need a running Postgres 16+.
 This will:
 - Install/start Postgres (Homebrew) if needed
 - Create the `taskmaster` role and database
-- Write `backend/.env.db` with `DATABASE_URL` and `ALEMBIC_DATABASE_URL`
+- Write `backend/.env` with `TASKMASTER_DATABASE_URL` and `TASKMASTER_ALEMBIC_DATABASE_URL`
 - Apply Alembic migrations
 
 ### Manual steps (alternative)
@@ -41,10 +41,10 @@ psql -d postgres -c "ALTER ROLE taskmaster CREATEDB;"
 createdb -O taskmaster taskmaster || true
 psql -d postgres -c "ALTER DATABASE taskmaster OWNER TO taskmaster;"
 
-# Create backend/.env.db with URLs
-cat > backend/.env.db <<EOF
-DATABASE_URL="postgresql+psycopg://taskmaster:taskmaster@localhost:5432/taskmaster"
-ALEMBIC_DATABASE_URL="postgresql+psycopg://taskmaster:taskmaster@localhost:5432/taskmaster"
+# Create backend/.env with URLs
+cat > backend/.env <<EOF
+TASKMASTER_DATABASE_URL="postgresql+psycopg://taskmaster:taskmaster@localhost:5432/taskmaster"
+TASKMASTER_ALEMBIC_DATABASE_URL="postgresql+psycopg://taskmaster:taskmaster@localhost:5432/taskmaster"
 EOF
 
 # Apply migrations

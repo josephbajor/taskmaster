@@ -50,7 +50,9 @@ def _serialize_tasks(tasks: List[Task] | None) -> str:
 def generate_tasks_with_agent(body: GenerateTasksRequest) -> GenerateTasksResponse:
     prompts = _load_prompts()
     settings = get_settings()
-    client = OpenAI()
+    client = (
+        OpenAI(api_key=settings.openai_api_key) if settings.openai_api_key else OpenAI()
+    )
 
     # Render user prompt with required variables; loader checks missing/extra vars
     user_prompt = PROMPT_LOADER.render(

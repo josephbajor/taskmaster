@@ -27,6 +27,54 @@ function sanitizeOperationId(opId, fallback) {
     return fallback;
 }
 
+function deepClone(value) {
+    return value == null ? value : JSON.parse(JSON.stringify(value));
+}
+
+function resolveRef(ref, components) {
+    if (typeof ref !== "string" || !ref.startsWith("#/components/schemas/")) return null;
+    const key = ref.replace("#/components/schemas/", "");
+    if (!components || !components.schemas || !components.schemas[key]) return null;
+    return components.schemas[key];
+}
+
+function dereferenceSchema(schema, components, seen = new Set()) {
+    if (!schema || typeof schema !== "object") return schema;
+    if (schema.$ref && typeof schema.$ref === "string") {
+        const refKey = schema.$ref;
+        if (seen.has(refKey)) return {}; // prevent cycles
+        const resolved = resolveRef(refKey, components);
+        if (!resolved) return deepClone(schema);
+        seen.add(refKey);
+        const derefResolved = dereferenceSchema(resolved, components, seen);
+        // Merge to allow local overrides alongside $ref (OpenAPI 3.1 behavior)
+        const { $ref, ...rest } = schema;
+        return dereferenceSchema({ ...deepClone(derefResolved), ...deepClone(rest) }, components, seen);
+    }
+    // Recurse into known composite keywords
+    const out = Array.isArray(schema) ? [] : {};
+    for (const [k, v] of Object.entries(schema)) {
+        if (v && typeof v === "object") {
+            if (k === "items") {
+                out[k] = dereferenceSchema(v, components, new Set(seen));
+            } else if (k === "properties") {
+                const props = {};
+                for (const [pk, pv] of Object.entries(v)) {
+                    props[pk] = dereferenceSchema(pv, components, new Set(seen));
+                }
+                out[k] = props;
+            } else if (["allOf", "anyOf", "oneOf"].includes(k) && Array.isArray(v)) {
+                out[k] = v.map((entry) => dereferenceSchema(entry, components, new Set(seen)));
+            } else {
+                out[k] = dereferenceSchema(v, components, new Set(seen));
+            }
+        } else {
+            out[k] = v;
+        }
+    }
+    return out;
+}
+
 function extractTasksTools(openapi) {
     const tools = [];
     const paths = openapi.paths || {};
@@ -55,13 +103,17 @@ function extractTasksTools(openapi) {
                     break;
                 }
             }
+            // Dereference schemas so tools.json is self-contained
+            const components = openapi.components || {};
+            const inputSchemaDeref = dereferenceSchema(inputSchema, components);
+            const outputSchemaDeref = dereferenceSchema(outputSchema, components);
             tools.push({
                 name: toolName,
                 method: method.toUpperCase(),
                 path: p,
                 description: summary,
-                inputSchema,
-                outputSchema,
+                inputSchema: inputSchemaDeref,
+                outputSchema: outputSchemaDeref,
             });
         }
     }
@@ -112,6 +164,71 @@ const AUTH_HEADER = process.env.TASKMASTER_API_KEY ? { 'Authorization': \`Bearer
 
 const toolsSpec = JSON.parse(fs.readFileSync(path.join(__dirname, 'tools.json'), 'utf-8')).tools;
 
+function buildUrlWithQuery(basePath, args) {
+  const url = new URL(basePath, BASE_URL);
+  if (args && typeof args === 'object') {
+    for (const [k, v] of Object.entries(args)) {
+      if (v === undefined || v === null) continue;
+      if (Array.isArray(v)) {
+        for (const item of v) {
+          url.searchParams.append(k, String(item));
+        }
+      } else if (typeof v === 'object') {
+        // naive serialization for objects
+        url.searchParams.set(k, JSON.stringify(v));
+      } else {
+        url.searchParams.set(k, String(v));
+      }
+    }
+  }
+  return url;
+}
+
+async function fetchWithRetry(url, init, { attempts = 2, timeoutMs = 15000 } = {}) {
+  let lastErr;
+  for (let i = 0; i < attempts; i++) {
+    const controller = new AbortController();
+    const to = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { ...init, signal: controller.signal });
+      clearTimeout(to);
+      return res;
+    } catch (err) {
+      clearTimeout(to);
+      lastErr = err;
+      if (i < attempts - 1) continue;
+    }
+  }
+  throw lastErr;
+}
+
+async function callToolHttp(t, args) {
+  const method = t.method;
+  const headers = { 'Content-Type': 'application/json', ...AUTH_HEADER };
+  let url;
+  const init = { method, headers };
+  if (method === 'GET') {
+    url = buildUrlWithQuery(t.path, args).toString();
+  } else {
+    url = new URL(t.path, BASE_URL).toString();
+    if (args && Object.keys(args).length) {
+      init.body = JSON.stringify(args);
+    }
+  }
+  const res = await fetchWithRetry(url, init);
+  const ct = (res.headers.get('content-type') || '').toLowerCase();
+  if (!res.ok) {
+    const text = ct.includes('application/json') ? JSON.stringify(await res.json()) : await res.text();
+    return { isError: true, content: [{ type: 'text', text: 'HTTP ' + res.status + ': ' + text }] };
+  }
+  if (ct.includes('application/json')) {
+    const body = await res.json();
+    return { content: [{ type: 'json', json: body }] };
+  }
+  const text = await res.text();
+  return { content: [{ type: 'text', text: text || 'ok' }] };
+}
+
 const server = new Server({
   name: 'taskmaster-mcp',
   version: '0.1.0'
@@ -127,21 +244,7 @@ if (typeof server.tool === 'function') {
       inputSchema: t.inputSchema,
       outputSchema: t.outputSchema,
       handler: async (input) => {
-        const url = new URL(t.path, BASE_URL).toString();
-        const init = { method: t.method, headers: { 'Content-Type': 'application/json', ...AUTH_HEADER } };
-        if (t.method !== 'GET' && input && Object.keys(input).length) {
-          init.body = JSON.stringify(input);
-        }
-        const res = await fetch(url, init);
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(\`HTTP \${res.status}: \${text}\`);
-        }
-        const ct = res.headers.get('content-type') || '';
-        if (ct.includes('application/json')) {
-          return await res.json();
-        }
-        return { ok: true };
+        return await callToolHttp(t, input || {});
       }
     });
   }
@@ -162,23 +265,9 @@ if (typeof server.tool === 'function') {
     const { name, arguments: args } = request.params || {};
     const t = toolsSpec.find((x) => x.name === name);
     if (!t) {
-      throw new Error(\`Tool not found: \${name}\`);
+      return { isError: true, content: [{ type: 'text', text: 'Tool not found: ' + name }] };
     }
-    const url = new URL(t.path, BASE_URL).toString();
-    const init = { method: t.method, headers: { 'Content-Type': 'application/json', ...AUTH_HEADER } };
-    if (t.method !== 'GET' && args && Object.keys(args).length) {
-      init.body = JSON.stringify(args);
-    }
-    const res = await fetch(url, init);
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(\`HTTP \${res.status}: \${text}\`);
-    }
-    const ct = res.headers.get('content-type') || '';
-    if (ct.includes('application/json')) {
-      return await res.json();
-    }
-    return { ok: true };
+    return await callToolHttp(t, args || {});
   });
 }
 

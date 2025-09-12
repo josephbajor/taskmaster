@@ -1,18 +1,15 @@
 from __future__ import annotations
 
-import os
 from typing import Generator, Optional
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
+from taskmaster.config import get_settings
 
 
 def _get_database_url() -> str:
-    database_url = os.getenv("DATABASE_URL")
-    if not database_url:
-        # Example: postgresql+psycopg://postgres:postgres@localhost:5432/taskmaster
-        raise RuntimeError("DATABASE_URL environment variable is not set")
-    return database_url
+    settings = get_settings()
+    return settings.get_database_url()
 
 
 _engine = None  # type: ignore[var-annotated]
