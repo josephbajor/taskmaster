@@ -27,29 +27,29 @@ class Settings(BaseSettings):
     )
 
     # Backend base URL used by MCP server to call the HTTP API
-    base_url: str = Field(default="http://127.0.0.1:8000", alias="BASE_URL")
+    base_url: str = Field(default="http://127.0.0.1:8000")
 
     # OpenAI settings
-    openai_model: str = Field(default="gpt-5.1", alias="OPENAI_MODEL")
-    openai_reasoning_effort: str = Field(
-        default="high", alias="OPENAI_REASONING_EFFORT"
-    )
-    openai_max_output_tokens: int = Field(
-        default=2000, alias="OPENAI_MAX_OUTPUT_TOKENS"
-    )
-    openai_api_key: Optional[str] = Field(default=None, alias="OPENAI_API_KEY")
+    openai_model: str = Field(default="gpt-5.1")
+    openai_reasoning_effort: str = Field(default="high")
+    openai_max_output_tokens: int = Field(default=2000)
+    openai_api_key: Optional[str] = Field(default=None)
 
     # Database settings
-    database_url: Optional[str] = Field(default=None, alias="DATABASE_URL")
+    database_url: str = Field(
+        default="postgresql+psycopg://taskmaster:taskmaster@localhost:5432/taskmaster",
+        description="Database URL for the backend. Used for both backend and Alembic migrations (if alembic_database_url is not set).",
+    )
     alembic_database_url: Optional[str] = Field(
-        default=None, alias="ALEMBIC_DATABASE_URL"
+        default=None,
+        description="Database URL for Alembic migrations. Defaults to database_url if not set.",
     )
 
     # Debugger settings (for local development)
-    backend_debug: bool = Field(default=False, alias="BACKEND_DEBUG")
-    backend_debug_wait: bool = Field(default=False, alias="BACKEND_DEBUG_WAIT")
-    backend_debug_host: str = Field(default="127.0.0.1", alias="BACKEND_DEBUG_HOST")
-    backend_debug_port: int = Field(default=5678, alias="BACKEND_DEBUG_PORT")
+    backend_debug: bool = Field(default=False)
+    backend_debug_wait: bool = Field(default=False)
+    backend_debug_host: str = Field(default="127.0.0.1")
+    backend_debug_port: int = Field(default=5678)
 
     def mcp_server_absolute_path(self) -> str:
         if not self.workspace_root:
